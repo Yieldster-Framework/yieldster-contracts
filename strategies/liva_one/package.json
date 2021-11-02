@@ -1,0 +1,29 @@
+{
+  "name": "liva-one",
+  "version": "1.0.0",
+  "description": "Liva one strategy with curve pool implementation",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yieldster-Framework/liva-one.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yieldster-Framework/liva-one/issues"
+  },
+  "homepage": "https://github.com/Yieldster-Framework/liva-one#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.1.0",
+    "@truffle/hdwallet-provider": "^1.4.1",
+    "dotenv": "^10.0.0",
+    "truffle-contract-size": "^2.0.1",
+    "web3": "^1.3.6"
+  }
+}

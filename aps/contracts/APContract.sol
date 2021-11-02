@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.7.0;
-import "../interfaces/IPriceModule.sol";
+pragma solidity ^0.6.0;
 
-contract APContract {
+import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
+import "./interfaces/IPriceModule.sol";
+
+contract APContract is Initializable {
     address public yieldsterDAO;
 
     address public yieldsterTreasury;
@@ -37,18 +39,6 @@ contract APContract {
 
     address public exchangeRegistry;
 
-    struct Asset {
-        string name;
-        string symbol;
-        bool created;
-    }
-
-    struct Protocol {
-        string name;
-        string symbol;
-        bool created;
-    }
-
     struct Vault {
         mapping(address => bool) vaultAssets;
         mapping(address => bool) vaultDepositAssets;
@@ -70,7 +60,6 @@ contract APContract {
     }
 
     struct Strategy {
-        string strategyName;
         mapping(address => bool) strategyProtocols;
         bool created;
         address minter;
@@ -80,7 +69,6 @@ contract APContract {
     }
 
     struct SmartStrategy {
-        string smartStrategyName;
         address minter;
         address executor;
         bool created;
@@ -100,9 +88,9 @@ contract APContract {
 
     mapping(address => VaultActiveStrategy) vaultActiveStrategies;
 
-    mapping(address => Asset) assets;
+    mapping(address => bool) assets;
 
-    mapping(address => Protocol) protocols;
+    mapping(address => bool) protocols;
 
     mapping(address => Vault) vaults;
 
@@ -116,7 +104,21 @@ contract APContract {
 
     mapping(address => address) minterStrategyMap;
 
-    constructor(
+    function initialize(
+        address _yieldsterDAO,
+        address _yieldsterTreasury,
+        address _yieldsterGOD,
+        address _emergencyVault,
+        address _apsManager
+    ) external initializer {
+        yieldsterDAO = _yieldsterDAO;
+        yieldsterTreasury = _yieldsterTreasury;
+        yieldsterGOD = _yieldsterGOD;
+        emergencyVault = _emergencyVault;
+        APSManagers[_apsManager] = true;
+    }
+
+    function configureAPS(
         address _whitelistModule,
         address _platformManagementFee,
         address _profitManagementFee,
@@ -125,12 +127,7 @@ contract APContract {
         address _exchangeRegistry,
         address _priceModule,
         address _safeUtils
-    ) public {
-        yieldsterDAO = msg.sender;
-        yieldsterTreasury = msg.sender;
-        yieldsterGOD = msg.sender;
-        emergencyVault = msg.sender;
-        APSManagers[msg.sender] = true;
+    ) external onlyYieldsterDAO {
         whitelistModule = _whitelistModule;
         platFormManagementFee = _platformManagementFee;
         stringUtils = _stringUtils;
@@ -143,14 +140,14 @@ contract APContract {
 
     /// @dev Function to add proxy Factory address to Yieldster.
     /// @param _proxyFactory Address of proxy factory.
-    function addProxyFactory(address _proxyFactory) public onlyManager {
+    function addProxyFactory(address _proxyFactory) external onlyManager {
         proxyFactory = _proxyFactory;
     }
 
     function setProfitAndPlatformManagementFeeStrategies(
         address _platformManagement,
         address _profitManagement
-    ) public onlyYieldsterDAO {
+    ) external onlyYieldsterDAO {
         if (_profitManagement != address(0))
             profitManagementFee = _profitManagement;
         if (_platformManagement != address(0))
@@ -158,7 +155,7 @@ contract APContract {
     }
 
     //Modifiers
-    modifier onlyYieldsterDAO {
+    modifier onlyYieldsterDAO() {
         require(
             yieldsterDAO == msg.sender,
             "Only Yieldster DAO is allowed to perform this operation"
@@ -166,7 +163,7 @@ contract APContract {
         _;
     }
 
-    modifier onlyManager {
+    modifier onlyManager() {
         require(
             APSManagers[msg.sender],
             "Only APS managers allowed to perform this operation!"
@@ -174,26 +171,26 @@ contract APContract {
         _;
     }
 
-    function isVault(address _address) public view returns (bool) {
+    function isVault(address _address) external view returns (bool) {
         return vaults[_address].created;
     }
 
     /// @dev Function to add APS manager to Yieldster.
     /// @param _manager Address of the manager.
-    function addManager(address _manager) public onlyYieldsterDAO {
+    function addManager(address _manager) external onlyYieldsterDAO {
         APSManagers[_manager] = true;
     }
 
     /// @dev Function to remove APS manager from Yieldster.
     /// @param _manager Address of the manager.
-    function removeManager(address _manager) public onlyYieldsterDAO {
+    function removeManager(address _manager) external onlyYieldsterDAO {
         APSManagers[_manager] = false;
     }
 
     /// @dev Function to change whitelist Manager.
     /// @param _whitelistManager Address of the whitelist manager.
     function changeWhitelistManager(address _whitelistManager)
-        public
+        external
         onlyYieldsterDAO
     {
         whitelistManager = _whitelistManager;
@@ -201,7 +198,7 @@ contract APContract {
 
     /// @dev Function to set Yieldster GOD.
     /// @param _yieldsterGOD Address of the Yieldster GOD.
-    function setYieldsterGOD(address _yieldsterGOD) public {
+    function setYieldsterGOD(address _yieldsterGOD) external {
         require(
             msg.sender == yieldsterGOD,
             "Only Yieldster GOD can perform this operation"
@@ -211,7 +208,7 @@ contract APContract {
 
     /// @dev Function to set Yieldster DAO.
     /// @param _yieldsterDAO Address of the Yieldster DAO.
-    function setYieldsterDAO(address _yieldsterDAO) public {
+    function setYieldsterDAO(address _yieldsterDAO) external {
         require(
             msg.sender == yieldsterDAO,
             "Only Yieldster DAO can perform this operation"
@@ -221,7 +218,7 @@ contract APContract {
 
     /// @dev Function to set Yieldster Treasury.
     /// @param _yieldsterTreasury Address of the Yieldster Treasury.
-    function setYieldsterTreasury(address _yieldsterTreasury) public {
+    function setYieldsterTreasury(address _yieldsterTreasury) external {
         require(
             msg.sender == yieldsterDAO,
             "Only Yieldster DAO can perform this operation"
@@ -230,7 +227,7 @@ contract APContract {
     }
 
     /// @dev Function to disable Yieldster GOD.
-    function disableYieldsterGOD() public {
+    function disableYieldsterGOD() external {
         require(
             msg.sender == yieldsterGOD,
             "Only Yieldster GOD can perform this operation"
@@ -241,7 +238,7 @@ contract APContract {
     /// @dev Function to set Emergency vault.
     /// @param _emergencyVault Address of the Yieldster Emergency vault.
     function setEmergencyVault(address _emergencyVault)
-        public
+        external
         onlyYieldsterDAO
     {
         emergencyVault = _emergencyVault;
@@ -249,20 +246,35 @@ contract APContract {
 
     /// @dev Function to set Safe Minter.
     /// @param _safeMinter Address of the Safe Minter.
-    function setSafeMinter(address _safeMinter) public onlyYieldsterDAO {
+    function setSafeMinter(address _safeMinter) external onlyYieldsterDAO {
         safeMinter = _safeMinter;
     }
 
     /// @dev Function to set safeUtils contract.
     /// @param _safeUtils Address of the safeUtils contract.
-    function setSafeUtils(address _safeUtils) public onlyYieldsterDAO {
+    function setSafeUtils(address _safeUtils) external onlyYieldsterDAO {
         safeUtils = _safeUtils;
+    }
+
+    /// @dev Function to set stringUtils contract.
+    /// @param _stringUtils Address of the stringUtils contract.
+    function setStringUtils(address _stringUtils) external onlyYieldsterDAO {
+        stringUtils = _stringUtils;
+    }
+
+    /// @dev Function to set whitelistModule contract.
+    /// @param _whitelistModule Address of the whitelistModule contract.
+    function setWhitelistModule(address _whitelistModule)
+        external
+        onlyYieldsterDAO
+    {
+        whitelistModule = _whitelistModule;
     }
 
     /// @dev Function to set exchangeRegistry address.
     /// @param _exchangeRegistry Address of the exchangeRegistry.
     function setExchangeRegistry(address _exchangeRegistry)
-        public
+        external
         onlyYieldsterDAO
     {
         exchangeRegistry = _exchangeRegistry;
@@ -281,7 +293,7 @@ contract APContract {
     /// @dev Function to set Yieldster Exchange.
     /// @param _yieldsterExchange Address of the Yieldster exchange.
     function setYieldsterExchange(address _yieldsterExchange)
-        public
+        external
         onlyYieldsterDAO
     {
         yieldsterExchange = _yieldsterExchange;
@@ -293,7 +305,7 @@ contract APContract {
     function setStockDepositWithdraw(
         address _stockDeposit,
         address _stockWithdraw
-    ) public onlyYieldsterDAO {
+    ) external onlyYieldsterDAO {
         stockDeposit = _stockDeposit;
         stockWithdraw = _stockWithdraw;
     }
@@ -330,20 +342,24 @@ contract APContract {
     //Price Module
     /// @dev Function to set Yieldster price module.
     /// @param _priceModule Address of the price module.
-    function setPriceModule(address _priceModule) public onlyManager {
+    function setPriceModule(address _priceModule) external onlyManager {
         priceModule = _priceModule;
     }
 
     /// @dev Function to get the USD price for a token.
     /// @param _tokenAddress Address of the token.
-    function getUSDPrice(address _tokenAddress) public view returns (uint256) {
+    function getUSDPrice(address _tokenAddress)
+        external
+        view
+        returns (uint256)
+    {
         return IPriceModule(priceModule).getUSDPrice(_tokenAddress);
     }
 
     //Vaults
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function createVault(address _vaultAddress) public {
+    function createVault(address _vaultAddress) external {
         require(
             msg.sender == proxyFactory,
             "Only Proxy Factory can perform this operation"
@@ -358,8 +374,8 @@ contract APContract {
     function addVault(
         address _vaultAPSManager,
         address _vaultStrategyManager,
-        uint256[] memory _whitelistGroup
-    ) public {
+        uint256[] calldata _whitelistGroup
+    ) external {
         require(vaultCreated[msg.sender], "Vault not created");
         Vault memory newVault = Vault({
             vaultAPSManager: _vaultAPSManager,
@@ -368,7 +384,7 @@ contract APContract {
             depositStrategy: stockDeposit,
             withdrawStrategy: stockWithdraw,
             created: true,
-            slippage: 500 //5 percent slippage
+            slippage: 50
         });
         vaults[msg.sender] = newVault;
 
@@ -377,8 +393,10 @@ contract APContract {
             platFormManagementFee
         ] = true;
         managementFeeStrategies[msg.sender].activeManagementFeeIndex[
-            platFormManagementFee
-        ] = managementFeeStrategies[msg.sender].activeManagementFeeList.length;
+                platFormManagementFee
+            ] = managementFeeStrategies[msg.sender]
+            .activeManagementFeeList
+            .length;
         managementFeeStrategies[msg.sender].activeManagementFeeList.push(
             platFormManagementFee
         );
@@ -388,8 +406,10 @@ contract APContract {
             profitManagementFee
         ] = true;
         managementFeeStrategies[msg.sender].activeManagementFeeIndex[
-            profitManagementFee
-        ] = managementFeeStrategies[msg.sender].activeManagementFeeList.length;
+                profitManagementFee
+            ] = managementFeeStrategies[msg.sender]
+            .activeManagementFeeList
+            .length;
         managementFeeStrategies[msg.sender].activeManagementFeeList.push(
             profitManagementFee
         );
@@ -401,11 +421,11 @@ contract APContract {
     /// @param _disabledDepositAsset List of deposit assets to be disabled in the vault.
     /// @param _disabledWithdrawalAsset List of withdrawal assets to be disabled in the vault.
     function setVaultAssets(
-        address[] memory _enabledDepositAsset,
-        address[] memory _enabledWithdrawalAsset,
-        address[] memory _disabledDepositAsset,
-        address[] memory _disabledWithdrawalAsset
-    ) public {
+        address[] calldata _enabledDepositAsset,
+        address[] calldata _enabledWithdrawalAsset,
+        address[] calldata _disabledDepositAsset,
+        address[] calldata _disabledWithdrawalAsset
+    ) external {
         require(vaults[msg.sender].created, "Vault not present");
 
         for (uint256 i = 0; i < _enabledDepositAsset.length; i++) {
@@ -438,19 +458,19 @@ contract APContract {
     }
 
     /// @dev Function to get the list of management fee strategies applied to the vault.
-    function getVaultManagementFee() public view returns (address[] memory) {
+    function getVaultManagementFee() external view returns (address[] memory) {
         require(vaults[msg.sender].created, "Vault not present");
         return managementFeeStrategies[msg.sender].activeManagementFeeList;
     }
 
     /// @dev Function to get the deposit strategy applied to the vault.
-    function getDepositStrategy() public view returns (address) {
+    function getDepositStrategy() external view returns (address) {
         require(vaults[msg.sender].created, "Vault not present");
         return vaults[msg.sender].depositStrategy;
     }
 
     /// @dev Function to get the withdrawal strategy applied to the vault.
-    function getWithdrawStrategy() public view returns (address) {
+    function getWithdrawStrategy() external view returns (address) {
         require(vaults[msg.sender].created, "Vault not present");
         return vaults[msg.sender].withdrawStrategy;
     }
@@ -461,7 +481,7 @@ contract APContract {
     function setManagementFeeStrategies(
         address _vaultAddress,
         address _managementFeeAddress
-    ) public {
+    ) external {
         require(vaults[_vaultAddress].created, "Vault not present");
         require(
             vaults[_vaultAddress].vaultStrategyManager == msg.sender,
@@ -471,10 +491,10 @@ contract APContract {
             _managementFeeAddress
         ] = true;
         managementFeeStrategies[_vaultAddress].activeManagementFeeIndex[
-            _managementFeeAddress
-        ] = managementFeeStrategies[_vaultAddress]
-        .activeManagementFeeList
-        .length;
+                _managementFeeAddress
+            ] = managementFeeStrategies[_vaultAddress]
+            .activeManagementFeeList
+            .length;
         managementFeeStrategies[_vaultAddress].activeManagementFeeList.push(
             _managementFeeAddress
         );
@@ -485,7 +505,7 @@ contract APContract {
     function removeManagementFeeStrategies(
         address _vaultAddress,
         address _managementFeeAddress
-    ) public {
+    ) external {
         require(vaults[_vaultAddress].created, "Vault not present");
         require(
             managementFeeStrategies[_vaultAddress].isActiveManagementFee[
@@ -509,51 +529,45 @@ contract APContract {
 
         if (
             managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeList
-            .length == 1
-        ) {
-            managementFeeStrategies[_vaultAddress]
                 .activeManagementFeeList
-                .pop();
+                .length == 1
+        ) {
+            managementFeeStrategies[_vaultAddress].activeManagementFeeList.pop();
         } else {
             uint256 index = managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeIndex[_managementFeeAddress];
+                .activeManagementFeeIndex[_managementFeeAddress];
             uint256 lastIndex = managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeList
-            .length - 1;
+                .activeManagementFeeList
+                .length - 1;
             delete managementFeeStrategies[_vaultAddress]
                 .activeManagementFeeList[index];
             managementFeeStrategies[_vaultAddress].activeManagementFeeIndex[
-                managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                    lastIndex
-                ]
-            ] = index;
+                    managementFeeStrategies[_vaultAddress]
+                        .activeManagementFeeList[lastIndex]
+                ] = index;
             managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                index
-            ] = managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                lastIndex
-            ];
-            managementFeeStrategies[_vaultAddress]
-                .activeManagementFeeList
-                .pop();
+                    index
+                ] = managementFeeStrategies[_vaultAddress]
+                .activeManagementFeeList[lastIndex];
+            managementFeeStrategies[_vaultAddress].activeManagementFeeList.pop();
         }
     }
 
     /// @dev Function to set vault active strategy.
     /// @param _strategyAddress Address of the strategy.
-    function setVaultActiveStrategy(address _strategyAddress) public {
+    function setVaultActiveStrategy(address _strategyAddress) external {
         require(vaults[msg.sender].created, "Vault not present");
-        require(strategies[_strategyAddress].created, "Strategy not present");
         require(
             _isStrategyEnabled(msg.sender, _strategyAddress),
-            "Strategy not enabled"
+            "This strategy is not enabled"
         );
+        require(strategies[_strategyAddress].created, "Strategy not present");
         vaultActiveStrategies[msg.sender].isActiveStrategy[
             _strategyAddress
         ] = true;
         vaultActiveStrategies[msg.sender].activeStrategyIndex[
-            _strategyAddress
-        ] = vaultActiveStrategies[msg.sender].activeStrategyList.length;
+                _strategyAddress
+            ] = vaultActiveStrategies[msg.sender].activeStrategyList.length;
         vaultActiveStrategies[msg.sender].activeStrategyList.push(
             _strategyAddress
         );
@@ -561,7 +575,7 @@ contract APContract {
 
     /// @dev Function to deactivate a vault strategy.
     /// @param _strategyAddress Address of the strategy.
-    function deactivateVaultStrategy(address _strategyAddress) public {
+    function deactivateVaultStrategy(address _strategyAddress) external {
         require(vaults[msg.sender].created, "Vault not present");
         require(
             vaultActiveStrategies[msg.sender].isActiveStrategy[
@@ -577,24 +591,26 @@ contract APContract {
             vaultActiveStrategies[msg.sender].activeStrategyList.pop();
         } else {
             uint256 index = vaultActiveStrategies[msg.sender]
-            .activeStrategyIndex[_strategyAddress];
+                .activeStrategyIndex[_strategyAddress];
             uint256 lastIndex = vaultActiveStrategies[msg.sender]
-            .activeStrategyList
-            .length - 1;
+                .activeStrategyList
+                .length - 1;
             delete vaultActiveStrategies[msg.sender].activeStrategyList[index];
             vaultActiveStrategies[msg.sender].activeStrategyIndex[
                 vaultActiveStrategies[msg.sender].activeStrategyList[lastIndex]
             ] = index;
             vaultActiveStrategies[msg.sender].activeStrategyList[
-                index
-            ] = vaultActiveStrategies[msg.sender].activeStrategyList[lastIndex];
+                    index
+                ] = vaultActiveStrategies[msg.sender].activeStrategyList[
+                lastIndex
+            ];
             vaultActiveStrategies[msg.sender].activeStrategyList.pop();
         }
     }
 
     /// @dev Function to get vault active strategy.
     function getVaultActiveStrategy(address _vaultAddress)
-        public
+        external
         view
         returns (address[] memory)
     {
@@ -603,7 +619,7 @@ contract APContract {
     }
 
     function isStrategyActive(address _vaultAddress, address _strategyAddress)
-        public
+        external
         view
         returns (bool)
     {
@@ -616,7 +632,7 @@ contract APContract {
     function getStrategyManagementDetails(
         address _vaultAddress,
         address _strategyAddress
-    ) public view returns (address, uint256) {
+    ) external view returns (address, uint256) {
         require(vaults[_vaultAddress].created, "Vault not present");
         require(strategies[_strategyAddress].created, "Strategy not present");
         require(
@@ -638,10 +654,10 @@ contract APContract {
     /// @param _assetsToBeEnabled List of assets that have to be enabled along with the strategy.
     function setVaultStrategyAndProtocol(
         address _vaultStrategy,
-        address[] memory _enabledStrategyProtocols,
-        address[] memory _disabledStrategyProtocols,
-        address[] memory _assetsToBeEnabled
-    ) public {
+        address[] calldata _enabledStrategyProtocols,
+        address[] calldata _disabledStrategyProtocols,
+        address[] calldata _assetsToBeEnabled
+    ) external {
         require(vaults[msg.sender].created, "Vault not present");
         require(strategies[_vaultStrategy].created, "Strategy not present");
         vaults[msg.sender].vaultEnabledStrategy[_vaultStrategy] = true;
@@ -682,8 +698,8 @@ contract APContract {
     /// @param _assetsToBeDisabled List of assets that have to be disabled along with the strategy.
     function disableVaultStrategy(
         address _strategyAddress,
-        address[] memory _assetsToBeDisabled
-    ) public {
+        address[] calldata _assetsToBeDisabled
+    ) external {
         require(vaults[msg.sender].created, "Vault not present");
         require(strategies[_strategyAddress].created, "Strategy not present");
         require(
@@ -705,7 +721,7 @@ contract APContract {
     /// @param _smartStrategyAddress Address of the smart strategy.
     /// @param _type type of smart strategy(deposit or withdraw).
     function setVaultSmartStrategy(address _smartStrategyAddress, uint256 _type)
-        public
+        external
     {
         require(vaults[msg.sender].created, "Vault not present");
         require(
@@ -729,11 +745,11 @@ contract APContract {
         address _vaultAddress,
         address _strategyAddress,
         address _protocolAddress
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         if (
             vaults[_vaultAddress].created &&
             strategies[_strategyAddress].created &&
-            protocols[_protocolAddress].created &&
+            protocols[_protocolAddress] &&
             vaults[_vaultAddress].vaultEnabledStrategy[_strategyAddress] &&
             vaultStrategyEnabledProtocols[_vaultAddress][_strategyAddress][
                 _protocolAddress
@@ -766,7 +782,7 @@ contract APContract {
 
     /// @dev Function to check if the asset is supported by the vault.
     /// @param cleanUpAsset Address of the asset.
-    function _isVaultAsset(address cleanUpAsset) public view returns (bool) {
+    function _isVaultAsset(address cleanUpAsset) external view returns (bool) {
         require(vaults[msg.sender].created, "Vault is not present");
         return vaults[msg.sender].vaultAssets[cleanUpAsset];
     }
@@ -775,37 +791,30 @@ contract APContract {
     /// @dev Function to check if an asset is supported by Yieldster.
     /// @param _address Address of the asset.
     function _isAssetPresent(address _address) private view returns (bool) {
-        return assets[_address].created;
+        return assets[_address];
     }
 
     /// @dev Function to add an asset to the Yieldster.
-    /// @param _symbol Symbol of the asset.
-    /// @param _name Name of the asset.
     /// @param _tokenAddress Address of the asset.
-    function addAsset(
-        string memory _symbol,
-        string memory _name,
-        address _tokenAddress
-    ) public onlyManager {
+    function addAsset(address _tokenAddress) external onlyManager {
         require(!_isAssetPresent(_tokenAddress), "Asset already present!");
-        Asset memory newAsset = Asset({
-            name: _name,
-            symbol: _symbol,
-            created: true
-        });
-        assets[_tokenAddress] = newAsset;
+        assets[_tokenAddress] = true;
     }
 
     /// @dev Function to remove an asset from the Yieldster.
     /// @param _tokenAddress Address of the asset.
-    function removeAsset(address _tokenAddress) public onlyManager {
+    function removeAsset(address _tokenAddress) external onlyManager {
         require(_isAssetPresent(_tokenAddress), "Asset not present!");
         delete assets[_tokenAddress];
     }
 
     /// @dev Function to check if an asset is supported deposit asset in the vault.
     /// @param _assetAddress Address of the asset.
-    function isDepositAsset(address _assetAddress) public view returns (bool) {
+    function isDepositAsset(address _assetAddress)
+        external
+        view
+        returns (bool)
+    {
         require(vaults[msg.sender].created, "Vault not present");
         return vaults[msg.sender].vaultDepositAssets[_assetAddress];
     }
@@ -813,7 +822,7 @@ contract APContract {
     /// @dev Function to check if an asset is supported withdrawal asset in the vault.
     /// @param _assetAddress Address of the asset.
     function isWithdrawalAsset(address _assetAddress)
-        public
+        external
         view
         returns (bool)
     {
@@ -829,26 +838,23 @@ contract APContract {
     }
 
     /// @dev Function to add a strategy to Yieldster.
-    /// @param _strategyName Name of the strategy.
     /// @param _strategyAddress Address of the strategy.
-    /// @param _strategyAddress List of protocols present in the strategy.
+    /// @param _strategyProtocols List of protocols present in the strategy.
     /// @param _minter Address of strategy minter.
     /// @param _executor Address of strategy executor.
     function addStrategy(
-        string memory _strategyName,
         address _strategyAddress,
-        address[] memory _strategyProtocols,
+        address[] calldata _strategyProtocols,
         address _minter,
         address _executor,
         address _benefeciary,
         uint256 _managementFeePercentage
-    ) public onlyManager {
+    ) external onlyManager {
         require(
             !_isStrategyPresent(_strategyAddress),
             "Strategy already present!"
         );
         Strategy memory newStrategy = Strategy({
-            strategyName: _strategyName,
             created: true,
             minter: _minter,
             executor: _executor,
@@ -870,7 +876,7 @@ contract APContract {
 
     /// @dev Function to remove a strategy from Yieldster.
     /// @param _strategyAddress Address of the strategy.
-    function removeStrategy(address _strategyAddress) public onlyManager {
+    function removeStrategy(address _strategyAddress) external onlyManager {
         require(_isStrategyPresent(_strategyAddress), "Strategy not present!");
         delete strategies[_strategyAddress];
     }
@@ -889,7 +895,7 @@ contract APContract {
     /// @param _strategyAddress Address of the strategy.
     /// @param _executor Address of the executor.
     function changeStrategyExecutor(address _strategyAddress, address _executor)
-        public
+        external
         onlyManager
     {
         require(_isStrategyPresent(_strategyAddress), "Strategy not present!");
@@ -908,20 +914,17 @@ contract APContract {
     }
 
     /// @dev Function to add a smart strategy to Yieldster.
-    /// @param _smartStrategyName Name of the smart strategy.
     /// @param _smartStrategyAddress Address of the smart strategy.
     function addSmartStrategy(
-        string memory _smartStrategyName,
         address _smartStrategyAddress,
         address _minter,
         address _executor
-    ) public onlyManager {
+    ) external onlyManager {
         require(
             !_isSmartStrategyPresent(_smartStrategyAddress),
             "Smart Strategy already present!"
         );
         SmartStrategy memory newSmartStrategy = SmartStrategy({
-            smartStrategyName: _smartStrategyName,
             minter: _minter,
             executor: _executor,
             created: true
@@ -933,11 +936,11 @@ contract APContract {
     /// @dev Function to remove a smart strategy from Yieldster.
     /// @param _smartStrategyAddress Address of the smart strategy.
     function removeSmartStrategy(address _smartStrategyAddress)
-        public
+        external
         onlyManager
     {
         require(
-            !_isSmartStrategyPresent(_smartStrategyAddress),
+            _isSmartStrategyPresent(_smartStrategyAddress),
             "Smart Strategy not present"
         );
         delete smartStrategies[_smartStrategyAddress];
@@ -959,7 +962,7 @@ contract APContract {
     function changeSmartStrategyExecutor(
         address _smartStrategy,
         address _executor
-    ) public onlyManager {
+    ) external onlyManager {
         require(
             _isSmartStrategyPresent(_smartStrategy),
             "Smart Strategy not present!"
@@ -971,33 +974,22 @@ contract APContract {
     /// @dev Function to check if a protocol is supported by Yieldster.
     /// @param _address Address of the protocol.
     function _isProtocolPresent(address _address) private view returns (bool) {
-        return protocols[_address].created;
+        return protocols[_address];
     }
 
     /// @dev Function to add a protocol to Yieldster.
-    /// @param _symbol symbol of the protocol.
-    /// @param _name Name of the protocol.
     /// @param _protocolAddress Address of the protocol.
-    function addProtocol(
-        string memory _symbol,
-        string memory _name,
-        address _protocolAddress
-    ) public onlyManager {
+    function addProtocol(address _protocolAddress) external onlyManager {
         require(
             !_isProtocolPresent(_protocolAddress),
             "Protocol already present!"
         );
-        Protocol memory newProtocol = Protocol({
-            name: _name,
-            created: true,
-            symbol: _symbol
-        });
-        protocols[_protocolAddress] = newProtocol;
+        protocols[_protocolAddress] = true;
     }
 
     /// @dev Function to remove a protocol from Yieldster.
     /// @param _protocolAddress Address of the protocol.
-    function removeProtocol(address _protocolAddress) public onlyManager {
+    function removeProtocol(address _protocolAddress) external onlyManager {
         require(_isProtocolPresent(_protocolAddress), "Protocol not present!");
         delete protocols[_protocolAddress];
     }

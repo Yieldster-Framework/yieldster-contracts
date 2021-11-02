@@ -1,0 +1,29 @@
+{
+  "name": "yieldster-aps",
+  "version": "1.0.0",
+  "description": "Contract for Assets, Protocol, and Strategies Management",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yieldster-Framework/yieldster-APS.git"
+  },
+  "author": "ddc",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yieldster-Framework/yieldster-APS/issues"
+  },
+  "homepage": "https://github.com/Yieldster-Framework/yieldster-APS#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.1.0",
+    "@openzeppelin/truffle-upgrades": "^1.6.1",
+    "truffle-contract-size": "^2.0.1",
+    "dotenv": "^8.2.0",
+    "@truffle/hdwallet-provider": "^1.2.6"
+  }
+}

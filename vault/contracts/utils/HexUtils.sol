@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract HexUtils {
     using SafeMath for uint256;
 
+    /// @dev Function to convert amount of tokens from native decimals to 18 decimals.
+    /// @param tokenAddress Address of the token.
+    /// @param tokenCount Amount of the token.
     function toDecimals(address tokenAddress, uint256 tokenCount)
         public
         view
@@ -20,6 +23,9 @@ contract HexUtils {
         }
     }
 
+    /// @dev Function to convert amount of tokens from 18 decimals to native decimals.
+    /// @param tokenAddress Address of the token.
+    /// @param tokenCount Amount of the token.
     function fromDecimals(address tokenAddress, uint256 tokenCount)
         public
         view

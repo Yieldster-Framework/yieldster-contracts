@@ -11,6 +11,7 @@ contract Exchange is VaultStorage {
         internal
         returns (uint256)
     {
+        // Iterates through assets list and if any token has required nav, exchange it for the target token. 
         for (uint256 i = 0; i < assetList.length; i++) {
             if (assetList[i] != targetToken) {
                 uint256 haveTokenUSD = IAPContract(APContract).getUSDPrice(
@@ -42,6 +43,10 @@ contract Exchange is VaultStorage {
         return 0;
     }
 
+    /// @dev Function to calculate the slippage accounted min return for an exchange operation.
+    /// @param fromToken Address of the from token.
+    /// @param toToken Address of the to token.
+    /// @param amount Amount of the from token.
     function calculateSlippage(
         address fromToken,
         address toToken,
@@ -74,6 +79,8 @@ contract Exchange is VaultStorage {
         address toToken,
         uint256 amount
     ) internal returns (uint256) {
+
+        // Get the address of exchange contract from exchange registry.
         address exchange = IExchangeRegistry(
             IAPContract(APContract).exchangeRegistry()
         ).getPair(fromToken, toToken);
@@ -106,6 +113,8 @@ contract Exchange is VaultStorage {
     {
         require(nav > 0, "non zero nav required");
         uint256 exchangedAmount = exchangeSingleToken(targetToken, nav);
+
+        // If exchange using Single token was not possible, try to exchange using multiple tokens.
         if (exchangedAmount > 0) {
             return exchangedAmount;
         } else {
@@ -113,6 +122,7 @@ contract Exchange is VaultStorage {
             uint256 currentNav;
             uint256 swappedAmount;
 
+            //Perform exchange until we reach the required nav.
             for (uint256 i = 0; i < assetList.length; i++) {
                 if (assetList[i] != targetToken) {
                     if (nav > currentNav) {

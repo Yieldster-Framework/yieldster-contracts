@@ -12,6 +12,7 @@ contract SafeUtils is VaultStorage {
                     address(this)
                 );
                 if (_amount > 0) {
+                    // Transfer unsupported tonken to Yieldster Treasury.
                     IERC20(cleanUpList[i]).safeTransfer(
                         IAPContract(APContract).yieldsterTreasury(),
                         _amount
@@ -21,6 +22,10 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to cleanup vault supported tokens and mint corresponding vault tokens to depositor.
+    /// @param _assetList Address list of tokens transfered.
+    /// @param _amount Amount list of tokens transfered.
+    /// @param reciever Address list of transferer.
     function approvedAssetCleanUp(
         address[] memory _assetList,
         uint256[] memory _amount,
@@ -48,6 +53,10 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to pay executor of strategy actions in assets present in vault.
+    /// @param gasCost list of gas costs of transactions.
+    /// @param beneficiary Address list of beneficiary.
+    /// @param gasToken Address list of gasTokens.
     function paybackExecutor(
         uint256[] memory gasCost,
         address[] memory beneficiary,
@@ -79,6 +88,9 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to update token balance in case of any inconsistancy.
+    /// @param _assetList Address list of Assets.
+    /// @param _amount Amount list of Assets.
     function tokenBalanceUpdation(
         address[] memory _assetList,
         uint256[] memory _amount
@@ -88,9 +100,11 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to perform Management fee Calculations in the Vault.
     function managementFeeCleanUp() public {
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
+        // Perform delegate call to management fee strategies.
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
             managementFeeStrategies[i].delegatecall(
                 abi.encodeWithSignature("executeSafeCleanUp()")

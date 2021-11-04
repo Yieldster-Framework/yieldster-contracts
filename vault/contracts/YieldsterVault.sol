@@ -4,7 +4,8 @@ pragma experimental ABIEncoderV2;
 import "./storage/VaultStorage.sol";
 
 contract YieldsterVault is VaultStorage {
-    /// @dev Function to upgrade the vault.
+    /// @dev Function to upgrade the mastercopy of Yieldster Vault.
+    /// @param _mastercopy Address of new mastercopy of Yieldster Vault.
     function upgradeMasterCopy(address _mastercopy) external {
         _isYieldsterGOD();
         (bool result, ) = address(this).call(
@@ -14,6 +15,7 @@ contract YieldsterVault is VaultStorage {
     }
 
     /// @dev Function to set APS Address.
+    /// @param _APContract Address of Yieldster APS contract.
     function setAPS(address _APContract) external {
         _isYieldsterGOD();
         APContract = _APContract;
@@ -32,6 +34,7 @@ contract YieldsterVault is VaultStorage {
         emergencyConditions = 2;
         address[] memory vaultActiveStrategy = getVaultActiveStrategy();
 
+        //Moves funds from active strategies to emergency vault
         for (uint256 i = 0; i < vaultActiveStrategy.length; i++) {
             if (vaultActiveStrategy[i] != address(0)) {
                 if (
@@ -53,6 +56,8 @@ contract YieldsterVault is VaultStorage {
                 IStrategy(vaultActiveStrategy[i]).deRegisterSafe();
             }
         }
+
+        //Moves assets from vault to emergency vault.
         for (uint256 i = 0; i < assetList.length; i++) {
             IERC20 token = IERC20(assetList[i]);
             uint256 tokenBalance = token.balanceOf(address(this));
@@ -72,6 +77,8 @@ contract YieldsterVault is VaultStorage {
 
     /// @dev Function that Disables vault interactions in case of Emergency Break and Emergency Exit.
     function _onlyNormalMode() private view {
+        //Emergency Break Mode = 1
+        //Emergency Exit Mode = 2
         if (emergencyConditions == 1) {
             _isYieldsterGOD();
         } else if (emergencyConditions == 2) {
@@ -84,6 +91,7 @@ contract YieldsterVault is VaultStorage {
         if (whiteListGroups.length == 0) {
             return;
         } else {
+            //Checks if user is whitelisted in any of the whitelist groups applied to the vault.
             for (uint256 i = 0; i < whiteListGroups.length; i++) {
                 if (
                     IWhitelist(IAPContract(APContract).whitelistModule())
@@ -96,6 +104,7 @@ contract YieldsterVault is VaultStorage {
         }
     }
 
+    /// @dev Function to check if the msg.sender is Yieldster GOD.
     function _isYieldsterGOD() private view {
         require(
             msg.sender == IAPContract(APContract).yieldsterGOD(),
@@ -103,33 +112,31 @@ contract YieldsterVault is VaultStorage {
         );
     }
 
+    /// @dev Function to check if the msg.sender is vault Strategy Manager.
     function _isStrategyManager() private view {
         require(msg.sender == vaultStrategyManager, "unauthorized");
     }
 
-    // / @dev Setup function sets initial storage of contract.
-    // / @param _vaultName Name of the Vault.
-    // / @param _tokenName Name of the Vault Token.
-    // / @param _symbol Symbol for the Vault Token.
-    // / @param _vaultAPSManager Address of the Vault APS Manager.
-    // / @param _vaultStrategyManager Address of the Vault Strategy Manager.
-    // / @param _owner Address of the Vault owner.
-    // / @param _whiteListGroups List of whitelist groups that is authorized to perform interactions.
+    /// @dev Setup function sets initial storage of contract.
+    /// @param _tokenName Name of the Vault Token.
+    /// @param _symbol Symbol for the Vault Token.
+    /// @param _vaultAPSManager Address of the Vault APS Manager.
+    /// @param _vaultStrategyManager Address of the Vault Strategy Manager.
+    /// @param _owner Address of the Vault owner.
+    /// @param _whiteListGroups List of whitelist groups that is authorized to perform interactions.
     function setup(
         string calldata _tokenName,
         string calldata _symbol,
         address _vaultAPSManager,
-        address _APContract,
-        // address _vaultStrategyManager, //uncomment this line in production
+        address _vaultStrategyManager,
         address _owner,
         uint256[] calldata _whiteListGroups
     ) external {
         require(!vaultSetupCompleted, "Vault is already setup");
         vaultSetupCompleted = true;
         vaultAPSManager = _vaultAPSManager;
-        vaultStrategyManager = _vaultAPSManager;
-        // APContract = 0xB24Ff34F5AE7F8Dde93A197FB406c1E78EEC0B25; //hardcode APContract address here before deploy to mainnet
-        APContract = _APContract;
+        vaultStrategyManager = _vaultStrategyManager;
+        APContract = 0xB24Ff34F5AE7F8Dde93A197FB406c1E78EEC0B25; //Address of the AP contract.
         owner = _owner;
         whiteListGroups = _whiteListGroups;
         setupToken(_tokenName, _symbol);
@@ -148,6 +155,8 @@ contract YieldsterVault is VaultStorage {
         );
     }
 
+    /// @dev Function to set slippage percentage of the vault.
+    /// @param _slippage slippage percentage.
     function setVaultSlippage(uint256 _slippage) external onlyNormalMode {
         _isStrategyManager();
         IAPContract(APContract).setVaultSlippage(_slippage);
@@ -207,6 +216,7 @@ contract YieldsterVault is VaultStorage {
                 _strategyAddress
             )
         ) {
+            //withdraw all shares from the strategy.
             if (IERC20(_strategyAddress).balanceOf(address(this)) > 0) {
                 (
                     ,
@@ -243,6 +253,8 @@ contract YieldsterVault is VaultStorage {
     {
         _isStrategyManager();
         IAPContract(APContract).deactivateVaultStrategy(_strategyAddress);
+
+        //withdraw all shares from the strategy.
         if (IERC20(_strategyAddress).balanceOf(address(this)) > 0) {
             (, address withdrawalAsset, uint256 withdrawalAmount) = IStrategy(
                 _strategyAddress
@@ -254,7 +266,7 @@ contract YieldsterVault is VaultStorage {
 
     /// @dev Function to set smart strategies to vault.
     /// @param _smartStrategyAddress Address of smart Strategy.
-    /// @param _type Type of smart strategy.
+    /// @param _type Type of smart strategy. Type can be either 1 or 2. 1 = Deposit Smart Strategy, 2 = Withdrawal Smart Strategy.
     function setVaultSmartStrategy(address _smartStrategyAddress, uint256 _type)
         external
     {
@@ -307,6 +319,8 @@ contract YieldsterVault is VaultStorage {
             IAPContract(APContract).isDepositAsset(_tokenAddress),
             "Not an approved deposit asset"
         );
+
+        //Collect all management fees aquired by the vault.
         managementFeeCleanUp();
         (bool result, ) = IAPContract(APContract)
             .getDepositStrategy()
@@ -349,20 +363,22 @@ contract YieldsterVault is VaultStorage {
         revertDelegate(result);
     }
 
-    // /// @dev Function to Withdraw shares from the Vault.
-    // /// @param _shares Amount of Vault token shares.
-    // function withdraw(uint256 _shares) external onlyNormalMode {
-    //     _isWhiteListed();
-    //     require(
-    //         balanceOf(msg.sender) >= _shares,
-    //         "You don't have enough shares"
-    //     );
-    //     managementFeeCleanUp();
-    //     (bool result, ) = IAPContract(APContract)
-    //     .getWithdrawStrategy()
-    //     .delegatecall(abi.encodeWithSignature("withdraw(uint256)", _shares));
-    //     revertDelegate(result);
-    // }
+    /// @dev Function to Withdraw shares from the Vault.
+    /// @param _shares Amount of Vault token shares.
+    function withdraw(uint256 _shares) external onlyNormalMode {
+        _isWhiteListed();
+        require(
+            balanceOf(msg.sender) >= _shares,
+            "You don't have enough shares"
+        );
+        managementFeeCleanUp();
+
+        //Performs delegate call to the withdrawal strategy applied to the vault.
+        (bool result, ) = IAPContract(APContract)
+        .getWithdrawStrategy()
+        .delegatecall(abi.encodeWithSignature("withdraw(uint256)", _shares));
+        revertDelegate(result);
+    }
 
     /// @dev Function to deposit vault assets to strategy
     /// @param _assets list of asset address to deposit
@@ -391,6 +407,8 @@ contract YieldsterVault is VaultStorage {
     }
 
     /// @dev Function to perform operation on Receivel of ERC1155 token from Yieldster Strategy Minter.
+    /// @param id Number denoting the type of instruction. 1 = safe Minter, 2 = strategy minter, 3 = deposit strategy minter, 4 = withdrawal strategy minter.
+    /// @param data Bytes containing encoded function call.
     function onERC1155Received(
         address,
         address,
@@ -404,6 +422,7 @@ contract YieldsterVault is VaultStorage {
                 IAPContract(APContract).safeMinter() == msg.sender,
                 "Only Safe Minter"
             );
+            //Performs delegate call to the safe Utils contract.
             (bool success, ) = IAPContract(APContract).safeUtils().delegatecall(
                 data
             );
@@ -416,6 +435,7 @@ contract YieldsterVault is VaultStorage {
                 ),
                 "Strategy inactive"
             );
+            //Performs call to the strategy.
             (bool success, bytes memory returnData) = IAPContract(APContract)
                 .getStrategyFromMinter(msg.sender)
                 .call(data);
@@ -427,6 +447,7 @@ contract YieldsterVault is VaultStorage {
                     IAPContract(APContract).getDepositStrategy(),
                 "Not Deposit strategy"
             );
+            //Performs delegate call to the deposit strategy.
             (bool success, ) = IAPContract(APContract)
                 .getStrategyFromMinter(msg.sender)
                 .delegatecall(data);
@@ -437,6 +458,7 @@ contract YieldsterVault is VaultStorage {
                     IAPContract(APContract).getWithdrawStrategy(),
                 "Not Withdraw strategy"
             );
+            //Performs delegate call to the withdrawal strategy.
             (bool success, ) = IAPContract(APContract)
                 .getStrategyFromMinter(msg.sender)
                 .delegatecall(data);
@@ -455,6 +477,7 @@ contract YieldsterVault is VaultStorage {
         address[] memory managementFeeStrategies = IAPContract(APContract)
             .getVaultManagementFee();
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
+            //Performs delegate call to the management fee strategy.
             managementFeeStrategies[i].delegatecall(
                 abi.encodeWithSignature("executeSafeCleanUp()")
             );

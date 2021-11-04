@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0 <0.7.0;
 import "../storage/VaultStorage.sol";
 
-contract ProfitManagementFee is VaultStorage {
+contract PerformanceFee is VaultStorage {
     function executeSafeCleanUp() public {
         uint256 currentVaultNAV = getVaultNAV();
         if (currentVaultNAV > tokenBalances.getLastTransactionNav()) {

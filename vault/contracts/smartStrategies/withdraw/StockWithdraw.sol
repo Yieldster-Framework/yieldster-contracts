@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../storage/VaultStorage.sol";
 
 contract StockWithdraw is VaultStorage {
+    /// @dev Function the returns the strategy with highest NAV and its NAV.
     function getStrategyWithHighestNav()
         internal
         view
@@ -13,6 +14,7 @@ contract StockWithdraw is VaultStorage {
             .getVaultActiveStrategy(address(this));
         address strategyWithHighestNav;
         uint256 highestNav;
+        // iterate through all strategies and find the one with highest NAV
         for (uint256 i = 0; i < strategies.length; i++) {
             uint256 strategyNav = (
                 IStrategy(strategies[i]).balanceOf(address(this)).mul(
@@ -27,7 +29,11 @@ contract StockWithdraw is VaultStorage {
         return (strategyWithHighestNav, highestNav);
     }
 
+    /// @dev Function to exchange given NAV to target token.
+    /// @param toToken Address of the target token.
+    /// @param nav NAV of asset to be exchanged.
     function exchange(address toToken, uint256 nav) internal returns (uint256) {
+        // Perform delegate call to exchange contract.
         (bool result, bytes memory data) = IAPContract(APContract)
             .yieldsterExchange()
             .delegatecall(
@@ -42,6 +48,10 @@ contract StockWithdraw is VaultStorage {
         return exchangeReturn;
     }
 
+    /// @dev Function to withdraw shares from given strategy.
+    /// @param strategy Address of the Strategy.
+    /// @param shares Amount of shares to be withdrawn.
+    /// @param tokenPrefered Address of the preferred withdrawal token.
     function withdrawFromStrategy(
         address strategy,
         uint256 shares,
@@ -54,6 +64,7 @@ contract StockWithdraw is VaultStorage {
             returnToken,
             tokenBalances.getTokenBalance(returnToken).add(returnAmount)
         );
+        // If strategy returns preferred token, then we return the amount, else we return the NAV of the return token.
         if (returnToken == tokenPrefered) {
             return (returnAmount, 0);
         } else {
@@ -66,6 +77,9 @@ contract StockWithdraw is VaultStorage {
         }
     }
 
+    /// @dev Function to perform withdrawals from multiple strategies.
+    /// @param navToWithdraw NAV to be withdrawn.
+    /// @param _tokenAddress Address of the preferred withdrawal token.
     function withdrawFromMultipleStrategy(
         uint256 navToWithdraw,
         address _tokenAddress
@@ -75,6 +89,8 @@ contract StockWithdraw is VaultStorage {
         uint256 navFromStrategyWithdraw;
         address[] memory strategies = IAPContract(APContract)
             .getVaultActiveStrategy(address(this));
+
+        // Iterate through all strategies and withdraw until required NAV is reached.
         for (uint256 i = 0; i < strategies.length; i++) {
             if (currentNav < navToWithdraw) {
                 uint256 strategyNav = (
@@ -113,6 +129,11 @@ contract StockWithdraw is VaultStorage {
         return (towardsNeedWithSlippage, navFromStrategyWithdraw);
     }
 
+    /// @dev Function to update token balance and transfer them to the msg.sender.
+    /// @param tokenAddress Address of the token.
+    /// @param updatedBalance New token balance.
+    /// @param shares Amount of shares to be burned.
+    /// @param transferAmount Amount of token to be transferred.
     function updateAndTransferTokens(
         address tokenAddress,
         uint256 updatedBalance,
@@ -127,6 +148,9 @@ contract StockWithdraw is VaultStorage {
         IERC20(tokenAddress).safeTransfer(msg.sender, transferAmount);
     }
 
+    /// @dev Function to withdraw from strategy.
+    /// @param _tokenAddress Address of the token.
+    /// @param _shares Amount of shares of the withdrawal.
     function strategyWithdraw(address _tokenAddress, uint256 _shares) internal {
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
         uint256 towardsNeedWithSlippage = (
@@ -150,6 +174,7 @@ contract StockWithdraw is VaultStorage {
             uint256 highestNav
         ) = getStrategyWithHighestNav();
 
+        // If strategy with highest NAV has required NAV, then withdraw from it. else withdraw from multiple strategies.
         if (highestNav >= strategyWithdrawNav) {
             (uint256 amount, uint256 returnNav) = withdrawFromStrategy(
                 strategyWithHighestNav,
@@ -173,6 +198,7 @@ contract StockWithdraw is VaultStorage {
         }
 
         uint256 exchangeReturn;
+        // Exchange NAV from other tokens to Target Token.
         if (haveNavInOtherTokens + navFromStrategyWithdraw > 0) {
             exchangeReturn = exchange(
                 _tokenAddress,
@@ -187,6 +213,9 @@ contract StockWithdraw is VaultStorage {
         );
     }
 
+    /// @dev Function to exchange assets in vault to withdrawal token.
+    /// @param _tokenAddress Address of the token.
+    /// @param _shares Amount of shares of the withdrawal.
     function exchangeWithdraw(address _tokenAddress, uint256 _shares) internal {
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
         uint256 tokenCount = (
@@ -247,7 +276,6 @@ contract StockWithdraw is VaultStorage {
     function withdraw(uint256 _shares) public {
         uint256 safeTotalSupply = totalSupply();
         _burn(msg.sender, _shares);
-        // address[] memory strategies;
         address[] memory strategies = IAPContract(APContract)
             .getVaultActiveStrategy(address(this));
 

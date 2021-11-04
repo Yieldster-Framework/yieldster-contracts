@@ -10,7 +10,7 @@ contract LockedWithdraw is VaultStorage {
     function withdraw(address _tokenAddress, uint256 _shares) public {
         addToAssetList(_tokenAddress);
         LockStorage lockStorage = LockStorage(
-            0xF8F1531383c56e7A5184E368714d58604a713291
+            0xF8F1531383c56e7A5184E368714d58604a713291 // LockStorage address
         );
         lockStorage.addRequest(msg.sender, _tokenAddress, _shares);
     }
@@ -24,11 +24,16 @@ contract LockedWithdraw is VaultStorage {
         lockStorage.addRequest(msg.sender, address(0), _shares);
     }
 
+    /// @dev Function to cleanup all withdrawal requests.
+    /// @param _strategies Address List of strategies to withdraw from.
+    /// @param _withdrawalAssets Address list of assets to withdraw.
+    /// @param _shares Amount list of shares to withdraw from corresponding strategies.
     function withdrawalCleanUp(
         address[] memory _strategies,
         address[] memory _withdrawalAssets,
         uint256[] memory _shares
     ) public {
+        // Withdraw from strategies
         for (uint256 i = 0; i < _strategies.length; i++) {
             (, address _returnToken, uint256 returnAmount) = IStrategy(
                 _strategies[i]
@@ -56,33 +61,23 @@ contract LockedWithdraw is VaultStorage {
         lockStorage.clearWithdrawals();
     }
 
-    //
-    //
-    //
-    //  Copied content
-    // ------------------
-    //
-    //
-    //
-    //
-    //
-
+    /// @dev Function the returns the strategy with highest NAV and its NAV.
     function getStrategyWithHighestNav()
         internal
         view
         returns (address, uint256)
     {
         address[] memory strategies = IAPContract(APContract)
-        .getVaultActiveStrategy(address(this));
+            .getVaultActiveStrategy(address(this));
         address strategyWithHighestNav;
         uint256 highestNav;
+        // iterate through all strategies and find the one with highest NAV
         for (uint256 i = 0; i < strategies.length; i++) {
             uint256 strategyNav = (
                 IStrategy(strategies[i]).balanceOf(address(this)).mul(
                     IStrategy(strategies[i]).tokenValueInUSD()
                 )
-            )
-            .div(1e18);
+            ).div(1e18);
             if (strategyNav > highestNav) {
                 strategyWithHighestNav = strategies[i];
                 highestNav = strategyNav;
@@ -91,41 +86,56 @@ contract LockedWithdraw is VaultStorage {
         return (strategyWithHighestNav, highestNav);
     }
 
+    /// @dev Function to exchange given NAV to target token.
+    /// @param toToken Address of the target token.
+    /// @param nav NAV of asset to be exchanged.
     function exchange(address toToken, uint256 nav) internal returns (uint256) {
+        // Perform delegate call to exchange contract.
         (bool result, bytes memory data) = IAPContract(APContract)
-        .yieldsterExchange()
-        .delegatecall(
-            abi.encodeWithSignature(
-                "exchangeTokens(address,uint256)",
-                toToken,
-                nav
-            )
-        );
+            .yieldsterExchange()
+            .delegatecall(
+                abi.encodeWithSignature(
+                    "exchangeTokens(address,uint256)",
+                    toToken,
+                    nav
+                )
+            );
         revertDelegate(result);
         uint256 exchangeReturn = abi.decode(data, (uint256));
         return exchangeReturn;
     }
 
+    /// @dev Function to withdraw shares from given strategy.
+    /// @param strategy Address of the Strategy.
+    /// @param shares Amount of shares to be withdrawn.
+    /// @param tokenPrefered Address of the preferred withdrawal token.
     function withdrawFromStrategy(
         address strategy,
         uint256 shares,
         address tokenPrefered
     ) internal returns (uint256, uint256) {
         (, address returnToken, uint256 returnAmount) = IStrategy(strategy)
-        .withdraw(shares, tokenPrefered);
+            .withdraw(shares, tokenPrefered);
+        tokenBalances.setTokenBalance(
+            returnToken,
+            tokenBalances.getTokenBalance(returnToken).add(returnAmount)
+        );
+        // If strategy returns preferred token, then we return the amount, else we return the NAV of the return token.
         if (returnToken == tokenPrefered) {
             return (returnAmount, 0);
         } else {
             uint256 returnNav = (
                 IHexUtils(IAPContract(APContract).stringUtils())
-                .toDecimals(returnToken, returnAmount)
-                .mul(IAPContract(APContract).getUSDPrice(returnToken))
-            )
-            .div(1e18);
+                    .toDecimals(returnToken, returnAmount)
+                    .mul(IAPContract(APContract).getUSDPrice(returnToken))
+            ).div(1e18);
             return (0, returnNav);
         }
     }
 
+    /// @dev Function to perform withdrawals from multiple strategies.
+    /// @param navToWithdraw NAV to be withdrawn.
+    /// @param _tokenAddress Address of the preferred withdrawal token.
     function withdrawFromMultipleStrategy(
         uint256 navToWithdraw,
         address _tokenAddress
@@ -134,15 +144,16 @@ contract LockedWithdraw is VaultStorage {
         uint256 towardsNeedWithSlippage;
         uint256 navFromStrategyWithdraw;
         address[] memory strategies = IAPContract(APContract)
-        .getVaultActiveStrategy(address(this));
+            .getVaultActiveStrategy(address(this));
+
+        // Iterate through all strategies and withdraw until required NAV is reached.
         for (uint256 i = 0; i < strategies.length; i++) {
             if (currentNav < navToWithdraw) {
                 uint256 strategyNav = (
                     IStrategy(strategies[i]).balanceOf(address(this)).mul(
                         IStrategy(strategies[i]).tokenValueInUSD()
                     )
-                )
-                .div(1e18);
+                ).div(1e18);
                 if (strategyNav <= (navToWithdraw - currentNav)) {
                     (uint256 amount, uint256 returnNav) = withdrawFromStrategy(
                         strategies[i],
@@ -174,6 +185,11 @@ contract LockedWithdraw is VaultStorage {
         return (towardsNeedWithSlippage, navFromStrategyWithdraw);
     }
 
+    /// @dev Function to update token balance and transfer them to the msg.sender.
+    /// @param tokenAddress Address of the token.
+    /// @param updatedBalance New token balance.
+    /// @param shares Amount of shares to be burned.
+    /// @param transferAmount Amount of token to be transferred.
     function updateAndTransferTokens(
         address tokenAddress,
         uint256 updatedBalance,
@@ -189,6 +205,10 @@ contract LockedWithdraw is VaultStorage {
         IERC20(tokenAddress).safeTransfer(_recipient, transferAmount);
     }
 
+    /// @dev Function to withdraw from strategy.
+    /// @param _tokenAddress Address of the token.
+    /// @param _shares Amount of shares of the withdrawal.
+    /// @param _recipient Address of the recipient.
     function strategyWithdraw(
         address _tokenAddress,
         uint256 _shares,
@@ -201,12 +221,12 @@ contract LockedWithdraw is VaultStorage {
         uint256 haveNavInOtherTokens = getVaultNAVWithoutStrategyToken() -
             (
                 IHexUtils(IAPContract(APContract).stringUtils())
-                .toDecimals(
-                    _tokenAddress,
-                    tokenBalances.getTokenBalance(_tokenAddress)
-                ).mul(tokenUSD)
-            )
-            .div(1e18);
+                    .toDecimals(
+                        _tokenAddress,
+                        tokenBalances.getTokenBalance(_tokenAddress)
+                    )
+                    .mul(tokenUSD)
+            ).div(1e18);
         uint256 navFromStrategyWithdraw;
         uint256 strategyWithdrawNav = (_shares.mul(getVaultNAV())).div(
             totalSupply()
@@ -231,9 +251,9 @@ contract LockedWithdraw is VaultStorage {
                 uint256 returnTowardsNeedWithSlippage,
                 uint256 returnNavFromStrategyWithdraw
             ) = withdrawFromMultipleStrategy(
-                strategyWithdrawNav,
-                _tokenAddress
-            );
+                    strategyWithdrawNav,
+                    _tokenAddress
+                );
             towardsNeedWithSlippage += returnTowardsNeedWithSlippage;
             navFromStrategyWithdraw += returnNavFromStrategyWithdraw;
         }
@@ -251,6 +271,10 @@ contract LockedWithdraw is VaultStorage {
         );
     }
 
+    /// @dev Function to exchange assets in vault to withdrawal token.
+    /// @param _tokenAddress Address of the token.
+    /// @param _shares Amount of shares of the withdrawal.
+    /// @param _recipient Address of the recipient.
     function exchangeWithdraw(
         address _tokenAddress,
         uint256 _shares,
@@ -259,8 +283,7 @@ contract LockedWithdraw is VaultStorage {
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
         uint256 tokenCount = (
             (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
-        )
-        .div(tokenUSD);
+        ).div(tokenUSD);
 
         uint256 towardsNeedWithSlippage = (
             tokenBalances.getTokenBalance(_tokenAddress)
@@ -268,9 +291,9 @@ contract LockedWithdraw is VaultStorage {
         uint256 haveTokenCount = IHexUtils(
             IAPContract(APContract).stringUtils()
         ).toDecimals(
-            _tokenAddress,
-            tokenBalances.getTokenBalance(_tokenAddress)
-        );
+                _tokenAddress,
+                tokenBalances.getTokenBalance(_tokenAddress)
+            );
         uint256 exchangeReturn = exchange(
             _tokenAddress,
             ((tokenCount - haveTokenCount).mul(tokenUSD)).div(1e18)
@@ -287,6 +310,7 @@ contract LockedWithdraw is VaultStorage {
     /// @dev Function to Withdraw assets from the Vault.
     /// @param _tokenAddress Address of the withdraw token.
     /// @param _shares Amount of Vault token shares.
+    /// @param _recipient Address of the recipient.
     function withdrawInToken(
         address _tokenAddress,
         uint256 _shares,
@@ -296,8 +320,7 @@ contract LockedWithdraw is VaultStorage {
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
         uint256 tokenCount = (
             (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
-        )
-        .div(tokenUSD);
+        ).div(tokenUSD);
         uint256 tokenCountDecimals = IHexUtils(
             IAPContract(APContract).stringUtils()
         ).fromDecimals(_tokenAddress, tokenCount);
@@ -317,11 +340,12 @@ contract LockedWithdraw is VaultStorage {
 
     /// @dev Function to Withdraw shares from the Vault.
     /// @param _shares Amount of Vault token shares.
+    /// @param _recipient Address of the recipient.
     function withdrawInShares(uint256 _shares, address _recipient) public {
         uint256 safeTotalSupply = totalSupply();
         _burn(_recipient, _shares);
         address[] memory strategies = IAPContract(APContract)
-        .getVaultActiveStrategy(address(this));
+            .getVaultActiveStrategy(address(this));
 
         for (uint256 i = 0; i < strategies.length; i++) {
             uint256 safeStrategyBalance = IStrategy(strategies[i]).balanceOf(
@@ -343,8 +367,7 @@ contract LockedWithdraw is VaultStorage {
             if (tokenBalances.getTokenBalance(assetList[i]) > 0) {
                 uint256 tokensToGive = (
                     _shares.mul(tokenBalances.getTokenBalance(assetList[i]))
-                )
-                .div(safeTotalSupply);
+                ).div(safeTotalSupply);
                 tokenBalances.setTokenBalance(
                     assetList[i],
                     tokenBalances.getTokenBalance(assetList[i]).sub(

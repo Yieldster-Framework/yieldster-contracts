@@ -18,23 +18,24 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint8 public emergencyConditions;
-    bool internal vaultSetupCompleted;
-    bool internal vaultRegistrationCompleted;
+    uint8 public emergencyConditions; // 0 - Normal Mode, 1 - Emergency Break, 2 - Emergency Exit.
+    bool internal vaultSetupCompleted; // set to true when vault is setup.
+    bool internal vaultRegistrationCompleted; //Boolean indicating if the vault has been registered with the AP contract.
 
-    address public APContract;
-    address public owner;
-    address public vaultAPSManager;
-    address public vaultStrategyManager;
+    address public APContract; // Address of the AP contract.
+    address public owner; // Address of the owner of the vault.
+    address public vaultAPSManager; // Address of the vault APS Manager.
+    address public vaultStrategyManager; // Address of the vault Strategy Manager.
 
-    uint256[] internal whiteListGroups;
-    address[] internal assetList;
-    mapping(address => bool) isAssetPresent;
+    uint256[] internal whiteListGroups; // list of whitelist groups applied to the vault.
+    address[] internal assetList; // list of assets in the vault.
+    mapping(address => bool) isAssetPresent; // Mapping of assets to their presence in the vault.
 
-    // Token balance storage keeps track of tokens that are deposited to safe without worrying direct depoited assets affesting the NAV;
+    // Token balance storage keeps track of tokens that are deposited to safe without worrying direct transfers affecting the NAV;
     TokenBalanceStorage tokenBalances;
 
-    /// @dev Function to revert in case of delegatecall fail.
+    /// @dev Function to revert in case of low level call fail.
+    /// @param delegateStatus Boolean indicating the status of low level call.
     function revertDelegate(bool delegateStatus) internal pure {
         if (delegateStatus == false) {
             assembly {
@@ -46,6 +47,8 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         }
     }
 
+    /// @dev Function to get the balance of token from tokenBalances.
+    /// @param _tokenAddress Address of the token.
     function getTokenBalance(address _tokenAddress)
         external
         view
@@ -54,6 +57,8 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         return tokenBalances.getTokenBalance(_tokenAddress);
     }
 
+    /// @dev Function to add a token to assetList.
+    /// @param _asset Address of the asset.
     function addToAssetList(address _asset) internal {
         if (!isAssetPresent[_asset]) {
             isAssetPresent[_asset] = true;
@@ -61,7 +66,7 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         }
     }
 
-    /// @dev Function to get the address of active strategy in the vault.
+    /// @dev Function to get the address list of active strategies in the vault.
     function getVaultActiveStrategy() public view returns (address[] memory) {
         return IAPContract(APContract).getVaultActiveStrategy(address(this));
     }
@@ -70,25 +75,28 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
     function getVaultNAV() public view returns (uint256) {
         address[] memory strategies = getVaultActiveStrategy();
         uint256 nav = 0;
+        //Finding NAV of all the assets.
         for (uint256 i = 0; i < assetList.length; i++) {
             if (tokenBalances.getTokenBalance(assetList[i]) > 0) {
                 uint256 tokenUSD = IAPContract(APContract).getUSDPrice(
                     assetList[i]
                 );
                 nav += IHexUtils(IAPContract(APContract).stringUtils())
-                .toDecimals(
-                    assetList[i],
-                    tokenBalances.getTokenBalance(assetList[i])
-                ).mul(tokenUSD);
+                    .toDecimals(
+                        assetList[i],
+                        tokenBalances.getTokenBalance(assetList[i])
+                    )
+                    .mul(tokenUSD);
             }
         }
         if (strategies.length == 0) {
             return nav.div(1e18);
         } else {
+            //Finding NAV of all the strategies.
             for (uint256 i = 0; i < strategies.length; i++) {
                 if (IERC20(strategies[i]).balanceOf(address(this)) > 0) {
                     uint256 strategyTokenUSD = IStrategy(strategies[i])
-                    .tokenValueInUSD();
+                        .tokenValueInUSD();
                     nav += IERC20(strategies[i]).balanceOf(address(this)).mul(
                         strategyTokenUSD
                     );
@@ -108,10 +116,11 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
                 );
                 nav += (
                     IHexUtils(IAPContract(APContract).stringUtils())
-                    .toDecimals(
-                        assetList[i],
-                        tokenBalances.getTokenBalance(assetList[i])
-                    ).mul(tokenUSD)
+                        .toDecimals(
+                            assetList[i],
+                            tokenBalances.getTokenBalance(assetList[i])
+                        )
+                        .mul(tokenUSD)
                 );
             }
         }
@@ -132,8 +141,7 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
                 IHexUtils(IAPContract(APContract).stringUtils())
                     .toDecimals(_tokenAddress, _amount)
                     .mul(tokenUSD)
-            )
-                .div(1e18);
+            ).div(1e18);
     }
 
     /// @dev Function to get the amount of Vault Tokens to be minted for the deposit NAV.
@@ -151,6 +159,10 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         }
     }
 
+    /// @dev Function to approve ERC20 token to the spendor.
+    /// @param _token Address of the Token.
+    /// @param _spender Address of the Spendor.
+    /// @param _amount Amount of the tokens.
     function _approveToken(
         address _token,
         address _spender,
@@ -162,6 +174,10 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         } else IERC20(_token).safeApprove(_spender, _amount);
     }
 
+    /// @dev Function to update token balance in tokenBalances.
+    /// @param tokenAddress Address of the Token.
+    /// @param tokenAmount Amount of the tokens.
+    /// @param isAddition Boolean indicating if token addition or substraction.
     function updateTokenBalance(
         address tokenAddress,
         uint256 tokenAmount,
@@ -180,6 +196,8 @@ contract VaultStorage is MasterCopy, ERC20, ERC20Detailed, ERC1155Receiver {
         }
     }
 
+    /// @dev Function to update token balance in tokenBalances if the updation is part of a low level call.
+    /// @param data Return data from low level call.
     function updateBalance(bytes memory data) internal {
         bool assetUpdation = abi.decode(data, (bool));
         if (assetUpdation) {

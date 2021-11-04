@@ -20,6 +20,7 @@ contract StockDeposit is VaultStorage {
             _tokenAddress,
             tokenBalances.getTokenBalance(_tokenAddress).add(_amount)
         );
+        // Minting vault tokens to the depositor.
         _mint(msg.sender, _share);
         addToAssetList(_tokenAddress);
     }

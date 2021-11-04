@@ -1,42 +1,23 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../interfaces/ICurveFunctions.sol";
 import "../interfaces/ICurveSwap.sol";
 import "../interfaces/ICurveUSDCPoolExchange.sol";
+import "../interfaces/IYieldsterExchange.sol";
+import "../interfaces/ICrvPool.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-interface CurveBase {
-    function add_liquidity(uint256[3] calldata, uint256) external;
-
-    function remove_liquidity_one_coin(
-        uint256,
-        int128,
-        uint256
-    ) external;
-}
-
-interface IYieldsterExchange {
-    function swap(
-        address,
-        address,
-        uint256,
-        uint256
-    ) external returns (uint256);
-}
 
 contract Stable3crvSwap {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    address public curveAddressProvider;
-    address public owner;
-    address public stableCoinSwapper;
+    address public curveAddressProvider; // Address of the Curve Address provider.
+    address public owner; // Address of the owner.
+    address public stableCoinSwapper; // Address of Stable Coin swap Contract.
+    address public basePool; // Address of Curve DAI/USDC/USDT pool.
 
-    address public basePool;
-    address public basePoolToken;
-    address[] public baseUnderlying;
-
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(msg.sender == owner, "Only owner allowed");
         _;
     }
@@ -48,17 +29,28 @@ contract Stable3crvSwap {
         );
         stableCoinSwapper = _stableCoinSwapper;
         basePool = address(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
-        basePoolToken = (0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
     }
 
+    /// @dev Function to set owner.
+    /// @param _owner Address of the owner.
     function setOwner(address _owner) external onlyOwner {
         owner = _owner;
     }
 
-    function changeAddressProvider(address _newAddress) external onlyOwner {
-        curveAddressProvider = _newAddress;
+    /// @dev Function to change the address of Curve Address provider contract.
+    /// @param _crvAddressProvider Address of new Curve Address provider contract.
+    function changeAddressProvider(address _crvAddressProvider)
+        external
+        onlyOwner
+    {
+        curveAddressProvider = _crvAddressProvider;
     }
 
+    /// @dev Function to swap From Token to To Token.
+    /// @param _from Address of From Token.
+    /// @param _to Address of To Token.
+    /// @param _amount Amount of From Tokens to swap.
+    /// @param _minReturn Min amount of To Token expected.
     function swap(
         address _from,
         address _to,
@@ -82,13 +74,15 @@ contract Stable3crvSwap {
             IERC20(_from).safeApprove(basePool, _amount);
         }
         uint256 balanceBefore = IERC20(_to).balanceOf(address(this));
-        CurveBase(basePool).add_liquidity(baseTokenShare, _minReturn);
+        ICrvPool(basePool).add_liquidity(baseTokenShare, _minReturn);
         uint256 balanceAfter = IERC20(_to).balanceOf(address(this));
         uint256 _returnAmount = balanceAfter.sub(balanceBefore);
         IERC20(_to).safeTransfer(msg.sender, _returnAmount);
         return _returnAmount;
     }
 
+    /// @dev Function that returns if a token is base pool token, along with its position and total coins.
+    /// @param _token Address of the Token.
     function _isBaseToken(address _token)
         private
         view
@@ -99,7 +93,7 @@ contract Stable3crvSwap {
         )
     {
         address mainRegistry = ICurveFunctions(curveAddressProvider)
-        .get_address(0);
+            .get_address(0);
         uint256[2] memory n_coin = ICurveFunctions(mainRegistry).get_n_coins(
             basePool
         );
@@ -114,6 +108,10 @@ contract Stable3crvSwap {
         return (false, 0, n_coin[0]);
     }
 
+    /// @dev Function to swap From Token to any available base pool token.
+    /// @param _from Address of From Token.
+    /// @param _amount Amount of From Tokens to swap.
+    /// @param _baseCoinLength Number of coins present in base pool.
     function _swapNoneBase(
         address _from,
         uint256 _amount,
@@ -127,9 +125,9 @@ contract Stable3crvSwap {
         )
     {
         address mainRegistry = ICurveFunctions(curveAddressProvider)
-        .get_address(0);
+            .get_address(0);
         address swapRegistry = ICurveFunctions(curveAddressProvider)
-        .get_address(2);
+            .get_address(2);
         address[8] memory baseTokens = ICurveFunctions(mainRegistry).get_coins(
             basePool
         );
@@ -142,7 +140,7 @@ contract Stable3crvSwap {
             if (_pool != address(0)) {
                 IERC20(_from).safeApprove(stableCoinSwapper, _amount);
                 uint256 returnAmount = IYieldsterExchange(stableCoinSwapper)
-                .swap(_from, baseTokens[i], _amount, 0);
+                    .swap(_from, baseTokens[i], _amount, 0);
 
                 return (returnAmount, i, baseTokens[i]);
             }

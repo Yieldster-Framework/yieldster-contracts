@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IYieldsterSwap {
+interface IYieldsterExchange {
     function swap(
         address _from,
         address _to,

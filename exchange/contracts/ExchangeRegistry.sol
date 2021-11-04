@@ -1,15 +1,18 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract ExchangeRegistry {
-    address owner;
-    // frm asset -> to assets -> contract address
-    mapping(address => mapping(address => address)) swapContracts;
+    address owner; // Address of exchange Registry owner.
+    mapping(address => mapping(address => address)) swapContracts; // Mapping to store the exchange contract address for From Token to To Token, From Token -> To Token -> Exchange contract.
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(msg.sender == owner, "Only owner allowed");
         _;
     }
 
+    /// @dev Function to get exchange contract address for From Token to To Token.
+    /// @param _from Address of From Token.
+    /// @param _to Address of To Token.
     function getSwapContract(address _from, address _to)
         public
         view
@@ -22,10 +25,16 @@ contract ExchangeRegistry {
         return swapContracts[_from][_to];
     }
 
+    /// @dev Function to set address of Owner.
+    /// @param _owner Address of new owner.
     function setOwner(address _owner) external onlyOwner {
         owner = _owner;
     }
 
+    /// @dev Function to add exchange contract address for From Token to To Token.
+    /// @param _from Address of From Token.
+    /// @param _to Address of To Token.
+    /// @param _contract Address of exchange contract.
     function addOrChangeSwapContract(
         address _from,
         address _to,
@@ -35,6 +44,9 @@ contract ExchangeRegistry {
         swapContracts[_from][_to] = _contract;
     }
 
+    /// @dev Function to remove exchange contract address for From Token to To Token.
+    /// @param _from Address of From Token.
+    /// @param _to Address of To Token.
     function removeSwapContract(address _from, address _to) external onlyOwner {
         delete swapContracts[_from][_to];
     }

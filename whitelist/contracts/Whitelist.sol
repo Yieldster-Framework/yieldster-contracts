@@ -2,21 +2,21 @@
 pragma solidity >=0.5.0 <0.7.0;
 
 contract Whitelist {
-    uint256 groupId;
-    address public whiteListManager;
+    uint256 groupId; // Id of the latest whitelist group created.
+    address public whiteListManager; // Address of the WhiteList Manager.
     struct WhitelistGroup {
         mapping(address => bool) members;
         mapping(address => bool) whitelistGroupAdmin;
         bool created;
     }
-    mapping(uint256 => WhitelistGroup) private whitelistGroups;
+    mapping(uint256 => WhitelistGroup) private whitelistGroups; // Mapping of groupId to Whitelist group.
     event GroupCreated(address, uint256);
 
     constructor() public {
         whiteListManager = msg.sender;
     }
 
-    modifier onlyWhitelistManager {
+    modifier onlyWhitelistManager() {
         require(
             msg.sender == whiteListManager,
             "Only Whitelist manager can call this function."
@@ -136,6 +136,9 @@ contract Whitelist {
         ] = true;
     }
 
+    /// @dev Function to remove the whitelist admin of a group.
+    /// @param _groupId Group Id of the whitelist group.
+    /// @param _whitelistGroupAdmin Address of the whitelist admin.
     function removeWhitelistAdmin(
         uint256 _groupId,
         address _whitelistGroupAdmin

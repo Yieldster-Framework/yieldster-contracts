@@ -13,9 +13,8 @@ import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 contract PriceModuleV4 is ChainlinkService, Initializable {
     using SafeMath for uint256;
 
-    address public priceModuleManager;
-
-    address public curveAddressProvider;
+    address public priceModuleManager; // Address of the Price Module Manager
+    address public curveAddressProvider; // Address of the Curve Address provider contract.
 
     struct Token {
         address feedAddress;
@@ -23,23 +22,31 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
         bool created;
     }
 
-    mapping(address => Token) tokens;
+    mapping(address => Token) tokens; // Mapping from address to Token Information
 
     function initialize() public {
         priceModuleManager = msg.sender;
         curveAddressProvider = 0x0000000022D53366457F9d5E68Ec105046FC4383;
     }
 
+    /// @dev Function to change the address of Curve Address provider contract.
+    /// @param _crvAddressProvider Address of new Curve Address provider contract.
     function changeCurveAddressProvider(address _crvAddressProvider) external {
         require(msg.sender == priceModuleManager, "Not Authorized");
         curveAddressProvider = _crvAddressProvider;
     }
 
+    /// @dev Function to set new Price Module Manager.
+    /// @param _manager Address of new Manager.
     function setManager(address _manager) external {
         require(msg.sender == priceModuleManager, "Not Authorized");
         priceModuleManager = _manager;
     }
 
+    /// @dev Function to add a token to Price Module.
+    /// @param _tokenAddress Address of the token.
+    /// @param _feedAddress Chainlink feed address of the token if it has a Chainlink price feed.
+    /// @param _tokenType Type of token.
     function addToken(
         address _tokenAddress,
         address _feedAddress,
@@ -54,6 +61,10 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
         tokens[_tokenAddress] = newToken;
     }
 
+    /// @dev Function to add tokens to Price Module in batch.
+    /// @param _tokenAddress Address List of the tokens.
+    /// @param _feedAddress Chainlink feed address list of the tokens if it has a Chainlink price feed.
+    /// @param _tokenType Type of token list.
     function addTokenInBatches(
         address[] memory _tokenAddress,
         address[] memory _feedAddress,
@@ -70,6 +81,8 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
         }
     }
 
+    /// @dev Function to retrieve price of a token from Chainlink price feed.
+    /// @param _feedAddress Chainlink feed address the tokens.
     function getPriceFromChainlink(address _feedAddress)
         internal
         view
@@ -85,8 +98,21 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
         }
     }
 
+    /// @dev Function to get price of a token.
+    /// @param _tokenAddress Address of the token..
     function getUSDPrice(address _tokenAddress) public view returns (uint256) {
         require(tokens[_tokenAddress].created, "Token not present");
+
+        // Token Types
+        //     1 = Token with a Chainlink price feed.
+        //     2 = USD based Curve Liquidity Pool token.
+        //     3 = Yearn Vault Token.
+        //     4 = Yieldster Strategy Token.
+        //     5 = Yieldster Vault Token.
+        //     6 = Ether based Curve Liquidity Pool Token.
+        //     7 = Euro based Curve Liquidity Pool Token.
+        //     8 = BTC based Curve Liquidity Pool Token.
+        //     9 = Convex based Token.
 
         if (tokens[_tokenAddress].tokenType == 1) {
             return getPriceFromChainlink(tokens[_tokenAddress].feedAddress);
@@ -116,7 +142,7 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
                 IAddressProvider(curveAddressProvider).get_registry()
             ).get_virtual_price_from_lp_token(_tokenAddress);
             uint256 euroToUSD = getUSDPrice(
-                address(0xb49f677943BC038e9857d61E7d053CaA2C1734C1)
+                address(0xb49f677943BC038e9857d61E7d053CaA2C1734C1) // Address representing Euro.
             );
             return (lpPriceEuro.mul(euroToUSD)).div(1e18);
         } else if (tokens[_tokenAddress].tokenType == 8) {
@@ -124,12 +150,12 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
                 IAddressProvider(curveAddressProvider).get_registry()
             ).get_virtual_price_from_lp_token(_tokenAddress);
             uint256 btcToUSD = getUSDPrice(
-                address(0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c)
+                address(0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c) // Address representing BTC.
             );
             return (lpPriceBTC.mul(btcToUSD)).div(1e18);
         } else if (tokens[_tokenAddress].tokenType == 9) {
             return
-                IPriceModule(0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c) //Replace this address with ConvexPrice contract address
+                IPriceModule(0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c) //Address of ConvexPrice contract.
                     .getUSDPrice(_tokenAddress);
         } else revert("Token not present");
     }

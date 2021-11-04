@@ -12,9 +12,8 @@ import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 contract PriceModule is ChainlinkService, Initializable {
     using SafeMath for uint256;
 
-    address public priceModuleManager;
-
-    address public curveAddressProvider;
+    address public priceModuleManager; // Address of the Price Module Manager
+    address public curveAddressProvider; // Address of the Curve Address provider contract.
 
     struct Token {
         address feedAddress;
@@ -22,23 +21,31 @@ contract PriceModule is ChainlinkService, Initializable {
         bool created;
     }
 
-    mapping(address => Token) tokens;
+    mapping(address => Token) tokens; // Mapping from address to Token Information
 
     function initialize() public {
         priceModuleManager = msg.sender;
         curveAddressProvider = 0x0000000022D53366457F9d5E68Ec105046FC4383;
     }
 
+    /// @dev Function to change the address of Curve Address provider contract.
+    /// @param _crvAddressProvider Address of new Curve Address provider contract.
     function changeCurveAddressProvider(address _crvAddressProvider) external {
         require(msg.sender == priceModuleManager, "Not Authorized");
         curveAddressProvider = _crvAddressProvider;
     }
 
+    /// @dev Function to set new Price Module Manager.
+    /// @param _manager Address of new Manager.
     function setManager(address _manager) external {
         require(msg.sender == priceModuleManager, "Not Authorized");
         priceModuleManager = _manager;
     }
 
+    /// @dev Function to add a token to Price Module.
+    /// @param _tokenAddress Address of the token.
+    /// @param _feedAddress Chainlink feed address of the token if it has a Chainlink price feed.
+    /// @param _tokenType Type of token.
     function addToken(
         address _tokenAddress,
         address _feedAddress,
@@ -53,6 +60,10 @@ contract PriceModule is ChainlinkService, Initializable {
         tokens[_tokenAddress] = newToken;
     }
 
+    /// @dev Function to add tokens to Price Module in batch.
+    /// @param _tokenAddress Address List of the tokens.
+    /// @param _feedAddress Chainlink feed address list of the tokens if it has a Chainlink price feed.
+    /// @param _tokenType Type of token list.
     function addTokenInBatches(
         address[] memory _tokenAddress,
         address[] memory _feedAddress,
@@ -69,8 +80,17 @@ contract PriceModule is ChainlinkService, Initializable {
         }
     }
 
+    /// @dev Function to get price of a token.
+    /// @param _tokenAddress Address of the token..
     function getUSDPrice(address _tokenAddress) public view returns (uint256) {
         require(tokens[_tokenAddress].created, "Token not present");
+
+        // Token Types
+        //     1 = Token with a Chainlink price feed.
+        //     2 = USD based Curve Liquidity Pool token.
+        //     3 = Yearn Vault Token.
+        //     4 = Yieldster Strategy Token.
+        //     5 = Yieldster Vault Token.
 
         if (tokens[_tokenAddress].tokenType == 1) {
             (int256 price, , uint8 decimals) = getLatestPrice(

@@ -5,105 +5,111 @@ import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 import "./interfaces/IPriceModule.sol";
 
 contract APContract is Initializable {
-    address public yieldsterDAO;
+    address public yieldsterDAO; // Address of the Yieldster DAO
 
-    address public yieldsterTreasury;
+    address public yieldsterTreasury; // Address of the Yieldster Treasury
 
-    address public yieldsterGOD;
+    address public yieldsterGOD; // Address of the Yieldster GOD
 
-    address public emergencyVault;
+    address public emergencyVault; // Address of the Emergency Vault
 
-    address public yieldsterExchange;
+    address public yieldsterExchange; // Address of the Yieldster Exchange
 
-    address public stringUtils;
+    address public stringUtils; // Address of the String Utils (Hex Utils)
 
-    address public whitelistModule;
+    address public whitelistModule; // Address of the Whitelist Module
 
-    address public whitelistManager;
+    address public whitelistManager; // Address of the Whitelist Manager
 
-    address public proxyFactory;
+    address public proxyFactory; // Address of the Proxy Factory
 
-    address public priceModule;
+    address public priceModule; // Address of the Price Module
 
-    address public platFormManagementFee;
+    address public platFormManagementFee; // Address of the Platform Management Fee
 
-    address public profitManagementFee;
+    address public profitManagementFee; // Address of the Profit (Performance) Management Fee
 
-    address public stockDeposit;
+    address public stockDeposit; // Address of the Stock Deposit
 
-    address public stockWithdraw;
+    address public stockWithdraw; // Address of the Stock Withdraw
 
-    address public safeMinter;
+    address public safeMinter; // Address of the Safe Minter
 
-    address public safeUtils;
+    address public safeUtils; // Address of the Safe Utils
 
-    address public exchangeRegistry;
+    address public exchangeRegistry; // Address of the Exchange Registry
 
     struct Vault {
-        mapping(address => bool) vaultAssets;
-        mapping(address => bool) vaultDepositAssets;
-        mapping(address => bool) vaultWithdrawalAssets;
-        mapping(address => bool) vaultEnabledStrategy;
-        address depositStrategy;
-        address withdrawStrategy;
-        address vaultAPSManager;
-        address vaultStrategyManager;
-        uint256[] whitelistGroup;
-        bool created;
-        uint256 slippage;
+        mapping(address => bool) vaultAssets; // Mapping of the assets that are in the vault
+        mapping(address => bool) vaultDepositAssets; // Mapping of the assets that are Depositable in the vault
+        mapping(address => bool) vaultWithdrawalAssets; // Mapping of the assets that are Withdrawable in the vault
+        mapping(address => bool) vaultEnabledStrategy; // Mapping of the strategies that are enabled in the vault
+        address depositStrategy; // Address of the Deposit Strategy applied to the vault
+        address withdrawStrategy; // Address of the Withdraw Strategy applied to the vault
+        address vaultAPSManager; // Address of the Vault APS Manager
+        address vaultStrategyManager; // Address of the Vault Strategy Manager
+        uint256[] whitelistGroup; // Array of the whitelist groups that are applied in the vault
+        bool created; // Flag to check if the vault has been created
+        uint256 slippage; // Slippage percentage applied in the vault
     }
 
     struct VaultActiveStrategy {
-        mapping(address => bool) isActiveStrategy;
-        mapping(address => uint256) activeStrategyIndex;
-        address[] activeStrategyList;
+        mapping(address => bool) isActiveStrategy; // Mapping of the strategies to the active status
+        mapping(address => uint256) activeStrategyIndex; // Mapping of the active strategy to their index in activeStrategyList
+        address[] activeStrategyList; // Array of the active strategies
     }
 
     struct Strategy {
-        mapping(address => bool) strategyProtocols;
-        bool created;
-        address minter;
-        address executor;
-        address benefeciary;
-        uint256 managementFeePercentage;
+        mapping(address => bool) strategyProtocols; // Mapping of the protocols that are enabled in the strategy
+        bool created; // Flag to check if the strategy has been created
+        address minter; // Address of the Strategy Minter
+        address executor; // Address of the Strategy Executor
+        address benefeciary; // Address of the Strategy Benefeciary
+        uint256 managementFeePercentage; // Percentage of the management fee (Annual Strategy Fee) applied to the strategy
     }
 
     struct SmartStrategy {
-        address minter;
-        address executor;
-        bool created;
+        address minter; // Address of the Smart Strategy Minter
+        address executor; // Address of the Smart Strategy Executor
+        bool created; // Flag to check if the Smart Strategy has been created
     }
 
     struct vaultActiveManagemetFee {
-        mapping(address => bool) isActiveManagementFee;
-        mapping(address => uint256) activeManagementFeeIndex;
-        address[] activeManagementFeeList;
+        mapping(address => bool) isActiveManagementFee; // Mapping of the management fees to the active status
+        mapping(address => uint256) activeManagementFeeIndex; // Mapping of the active management fee to their index in activeManagementFeeList
+        address[] activeManagementFeeList; // Array of the active management fees
     }
 
-    event VaultCreation(address vaultAddress);
+    event VaultCreation(address vaultAddress); // Event emitted when a vault is created
 
-    mapping(address => vaultActiveManagemetFee) managementFeeStrategies;
+    mapping(address => vaultActiveManagemetFee) managementFeeStrategies; // Mapping from vault to the active management fee strategies
 
-    mapping(address => mapping(address => mapping(address => bool))) vaultStrategyEnabledProtocols;
+    mapping(address => mapping(address => mapping(address => bool))) vaultStrategyEnabledProtocols; // Mapping from vault to the enabled strategies and protocols
 
-    mapping(address => VaultActiveStrategy) vaultActiveStrategies;
+    mapping(address => VaultActiveStrategy) vaultActiveStrategies; // Mapping from vault to the active strategies
 
-    mapping(address => bool) assets;
+    mapping(address => bool) assets; // Mapping from asset address to the status of the asset
 
-    mapping(address => bool) protocols;
+    mapping(address => bool) protocols; // Mapping from protocol address to the status of the protocol
 
-    mapping(address => Vault) vaults;
+    mapping(address => Vault) vaults; // Mapping from vault address to the vault
 
-    mapping(address => Strategy) strategies;
+    mapping(address => Strategy) strategies; // Mapping from strategy address to the strategy
 
-    mapping(address => SmartStrategy) smartStrategies;
+    mapping(address => SmartStrategy) smartStrategies; // Mapping from smart strategy address to the smart strategy
 
-    mapping(address => bool) vaultCreated;
+    mapping(address => bool) vaultCreated; // Mapping from vault address to the status of the vault creation
 
-    mapping(address => bool) APSManagers;
+    mapping(address => bool) APSManagers; // Mapping from APS Manager address to the status of the APS Manager
 
-    mapping(address => address) minterStrategyMap;
+    mapping(address => address) minterStrategyMap; // Mapping from minter address to the strategy address
 
+    /// @dev Function that is automatically invoked when a proxy of the AP Contract is created.
+    /// @param _yieldsterDAO Address of the Yieldster DAO
+    /// @param _yieldsterTreasury Address of the Yieldster Treasury
+    /// @param _yieldsterGOD Address of the Yieldster GOD
+    /// @param _emergencyVault Address of the Yieldster Emergency Vault
+    /// @param _apsManager Address of the APS Manager
     function initialize(
         address _yieldsterDAO,
         address _yieldsterTreasury,
@@ -118,6 +124,15 @@ contract APContract is Initializable {
         APSManagers[_apsManager] = true;
     }
 
+    /// @dev Function configures the APS Contract with the addresses of the modules.
+    /// @param _whitelistModule Address of the Whitelist Module
+    /// @param _platformManagementFee Address of the Platform Management Fee
+    /// @param _profitManagementFee Address of the Profit Management Fee
+    /// @param _stringUtils Address of the String Utils (Hex Utils)
+    /// @param _yieldsterExchange Address of the Yieldster Exchange
+    /// @param _exchangeRegistry Address of the Exchange Registry
+    /// @param _priceModule Address of the Price Module
+    /// @param _safeUtils Address of the Safe Utils
     function configureAPS(
         address _whitelistModule,
         address _platformManagementFee,
@@ -144,6 +159,9 @@ contract APContract is Initializable {
         proxyFactory = _proxyFactory;
     }
 
+    /// @dev Function to set Management Fee Strategies.
+    /// @param _platformManagement Address of the Platform Management Fee Strategy
+    /// @param _profitManagement Address of the Profit Management Fee Strategy
     function setProfitAndPlatformManagementFeeStrategies(
         address _platformManagement,
         address _profitManagement
@@ -171,6 +189,8 @@ contract APContract is Initializable {
         _;
     }
 
+    /// @dev Function to check if an address is an Yieldster Vault.
+    /// @param _address Address to check.
     function isVault(address _address) external view returns (bool) {
         return vaults[_address].created;
     }
@@ -609,6 +629,7 @@ contract APContract is Initializable {
     }
 
     /// @dev Function to get vault active strategy.
+    /// @param _vaultAddress Address of the vault.
     function getVaultActiveStrategy(address _vaultAddress)
         external
         view
@@ -618,6 +639,9 @@ contract APContract is Initializable {
         return vaultActiveStrategies[_vaultAddress].activeStrategyList;
     }
 
+    /// @dev Function to check if a strategy is active in a vault.
+    /// @param _vaultAddress Address of the vault.
+    /// @param _strategyAddress Address of the strategy.
     function isStrategyActive(address _vaultAddress, address _strategyAddress)
         external
         view
@@ -629,6 +653,9 @@ contract APContract is Initializable {
             ];
     }
 
+    /// @dev Function to get management fee associated with a strategy in a vault.
+    /// @param _vaultAddress Address of the vault.
+    /// @param _strategyAddress Address of the strategy.
     function getStrategyManagementDetails(
         address _vaultAddress,
         address _strategyAddress
@@ -842,6 +869,8 @@ contract APContract is Initializable {
     /// @param _strategyProtocols List of protocols present in the strategy.
     /// @param _minter Address of strategy minter.
     /// @param _executor Address of strategy executor.
+    /// @param _benefeciary Address of strategy beneficiary.
+    /// @param _managementFeePercentage Percentage of strategy Annual fee.
     function addStrategy(
         address _strategyAddress,
         address[] calldata _strategyProtocols,

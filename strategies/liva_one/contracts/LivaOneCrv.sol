@@ -15,21 +15,33 @@ import "./interfaces/ICrvPool.sol";
 import "./interfaces/ICrv3Pool.sol";
 import "./interfaces/IExchangeRegistry.sol";
 
+// Strategy Deposit
+// 1. Deposit DAI/USDC/USDT to DAI/USDC/USDT pool to get 3Crv
+// 2. Exchange other tokens for 3Crv
+// 3. Deposit 3Crv to Target Pool and get Target LP token.
+// 4. Deposit Target LP tokens to Target Yearn Vault
+
+// Change Protocol
+// 1. Withdraw LP tokens from Current Yearn Vault.
+// 2. Withdraw 3Crv from Current Pool.
+// 3. Deposit 3Crv to Target Pool.
+// 4. Deposit Target LP tokens to Target Yearn Vault.
+
 contract LivaOneCrv is ERC20 {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address public APContract;
-    address public owner;
-    address private crv3Token = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
+    address public APContract; // Address of the AP contract
+    address public owner; // Address of the owner of the contract
+    address private crv3Token = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490; // Address of 3Crv token
     address private crvAddressProvider =
-        0x0000000022D53366457F9d5E68Ec105046FC4383;
+        0x0000000022D53366457F9d5E68Ec105046FC4383; // Address of curve address provider contract
     uint256 slippage = 10; //  0.1% slippage
     uint256 slippageSwap = 50; //  0.5% slippage on swap
 
-    address[] public protocolList;
-    mapping(address => bool) private protocols;
-    mapping(address => uint256) protocolIndex;
+    address[] public protocolList; // List of Yearn Vaults that are part of the Strategy.
+    mapping(address => bool) private protocols; // Mapping from protocol to their status.
+    mapping(address => uint256) protocolIndex; // Index of the protocol in the protocolList.
 
     struct Vault {
         bool isRegistered;
@@ -37,7 +49,7 @@ contract LivaOneCrv is ERC20 {
         mapping(address => uint256) protocolBalance;
     }
 
-    mapping(address => Vault) vaults;
+    mapping(address => Vault) vaults; // Mapping from vault address to their Details.
 
     modifier onlyRegisteredVault() {
         require(vaults[msg.sender].isRegistered, "Not a registered Safe");
@@ -49,7 +61,7 @@ contract LivaOneCrv is ERC20 {
         _;
     }
 
-    /// @dev Function to add new yearn protocols to the strategy.
+    /// @dev Function to add new yearn protocol to the strategy.
     /// @param _protocol Address of the yearn protocol.
     function addProtocol(address _protocol) external onlyOwner {
         require(_protocol != address(0), "Zero address");
@@ -184,7 +196,7 @@ contract LivaOneCrv is ERC20 {
             if (amounts[i] > 0) _approveToken(assets[i], pool, amounts[i]);
         }
         uint256 crv3TokenBefore = IERC20(crv3Token).balanceOf(address(this));
-        ICrv3Pool(pool).add_liquidity(amounts, min_mint_amount);
+        ICrv3Pool(pool).add_liquidity(amounts, min_mint_amount); // Add liquidity to curve DAI/USDC/USDT pool.
         uint256 crv3TokenAfter = IERC20(crv3Token).balanceOf(address(this));
         uint256 returnAmount = crv3TokenAfter.sub(crv3TokenBefore);
         return returnAmount;
@@ -228,7 +240,7 @@ contract LivaOneCrv is ERC20 {
         ).fromDecimals(underlying, expectedUnderlyingDecimal);
         uint256 min_mint_amount = expectedUnderlying - //SLIPPAGE
             expectedUnderlying.mul(slippage).div(10000);
-        ICrvPool(pool).add_liquidity(amounts, min_mint_amount);
+        ICrvPool(pool).add_liquidity(amounts, min_mint_amount); // Add liquidity to curve pool.
         uint256 underlyingAfter = IERC20(underlying).balanceOf(address(this));
         return underlyingAfter.sub(underlyingBefore);
     }
@@ -242,7 +254,7 @@ contract LivaOneCrv is ERC20 {
     {
         address underlying = IVault(yVault).token();
         _approveToken(underlying, yVault, amount);
-        uint256 yVaultTokens = IVault(yVault).deposit(amount);
+        uint256 yVaultTokens = IVault(yVault).deposit(amount); // Deposit LP tokens to Yearn Vault.
         return yVaultTokens;
     }
 
@@ -423,6 +435,7 @@ contract LivaOneCrv is ERC20 {
     function getStrategyNAV() public view returns (uint256) {
         uint256 strategyNAV;
         if (vaults[msg.sender].isRegistered) {
+            // Return the Strategy NAV of the subscribed vault.
             address protocol = vaults[msg.sender].vaultActiveProtocol;
             uint256 protocolBalance = vaults[msg.sender].protocolBalance[
                 protocol
@@ -439,6 +452,7 @@ contract LivaOneCrv is ERC20 {
             }
             return strategyNAV;
         } else {
+            // Return overall NAV strategy if msg.sender is not subscribed vault.
             for (uint256 i = 0; i < protocolList.length; i++) {
                 if (IERC20(protocolList[i]).balanceOf(address(this)) > 0) {
                     uint256 tokenUSD = IAPContract(APContract).getUSDPrice(

@@ -15,22 +15,28 @@ import "./interfaces/ICrvPool.sol";
 import "./interfaces/ICrv3Pool.sol";
 import "./interfaces/IExchangeRegistry.sol";
 
+// Strategy Deposit
+// 1. Deposit DAI/USDC/USDT to DAI/USDC/USDT pool to get 3Crv
+// 2. Exchange other tokens for 3Crv
+// 3. Deposit 3Crv and Pool Base token to Target Pool and get Target LP token.
+// 4. Deposit Target LP tokens to Target Yearn Vault
+
 contract SingleAsset3Crv is ERC20 {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address public APContract;
-    address public owner;
-    address private crv3Token = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490;
+    address public APContract; // Address of the AP contract
+    address public owner; // Address of the owner of the contract
+    address private crv3Token = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490; // Address of 3Crv token
     address private crvAddressProvider =
-        0x0000000022D53366457F9d5E68Ec105046FC4383;
+        0x0000000022D53366457F9d5E68Ec105046FC4383; // Address of curve address provider contract
     uint256 slippage = 50; //  0.5% slippage
     uint256 slippageSwap = 50; //  0.5% slippage on swap
 
-    address public protocol;
-    uint256 public protocolBalance;
-    address public baseToken;
-    mapping(address => bool) isRegistered;
+    address public protocol; // Address of the Yearn Vault.
+    uint256 public protocolBalance; // Balance of Strategy in Yearn Vault.
+    address public baseToken; // Address of the base token of the pool.
+    mapping(address => bool) isRegistered; // Mapping of registered Vault in the Strategy.
 
     modifier onlyRegisteredVault() {
         require(isRegistered[msg.sender], "Not a registered Safe");
@@ -121,6 +127,10 @@ contract SingleAsset3Crv is ERC20 {
         } else IERC20(_token).safeApprove(_spender, _amount);
     }
 
+    /// @dev Function to calculate the slippage accounted min return for an exchange operation.
+    /// @param fromToken Address of the from token.
+    /// @param toToken Address of the to token.
+    /// @param amount Amount of the from token.
     function calculateSlippage(
         address fromToken,
         address toToken,
@@ -160,7 +170,7 @@ contract SingleAsset3Crv is ERC20 {
             if (amounts[i] > 0) _approveToken(assets[i], pool, amounts[i]);
         }
         uint256 crv3TokenBefore = IERC20(crv3Token).balanceOf(address(this));
-        ICrv3Pool(pool).add_liquidity(amounts, min_mint_amount);
+        ICrv3Pool(pool).add_liquidity(amounts, min_mint_amount); // Deposit to DAI/USDC/USDT Pool
         uint256 crv3TokenAfter = IERC20(crv3Token).balanceOf(address(this));
         uint256 returnAmount = crv3TokenAfter.sub(crv3TokenBefore);
         return returnAmount;
@@ -213,7 +223,7 @@ contract SingleAsset3Crv is ERC20 {
             }
         }
         uint256 underlyingBefore = IERC20(underlying).balanceOf(address(this));
-        ICrvPool(pool).add_liquidity(amounts, min_mint_amount);
+        ICrvPool(pool).add_liquidity(amounts, min_mint_amount); // Deposit to traget pool.
         uint256 underlyingAfter = IERC20(underlying).balanceOf(address(this));
         return underlyingAfter.sub(underlyingBefore);
     }

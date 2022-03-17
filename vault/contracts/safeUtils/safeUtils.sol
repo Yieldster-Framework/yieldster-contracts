@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity ^0.8.1;
 import "../storage/VaultStorage.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract SafeUtils is VaultStorage {
     /// @dev Function to cleanup vault unsupported tokens to the Yieldster Treasury.
     /// @param cleanUpList List of unsupported tokens to be transfered.
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
     function safeCleanUp(address[] memory cleanUpList) public {
         for (uint256 i = 0; i < cleanUpList.length; i++) {
             if (!(IAPContract(APContract)._isVaultAsset(cleanUpList[i]))) {
@@ -12,7 +17,6 @@ contract SafeUtils is VaultStorage {
                     address(this)
                 );
                 if (_amount > 0) {
-                    // Transfer unsupported tonken to Yieldster Treasury.
                     IERC20(cleanUpList[i]).safeTransfer(
                         IAPContract(APContract).yieldsterTreasury(),
                         _amount
@@ -22,10 +26,6 @@ contract SafeUtils is VaultStorage {
         }
     }
 
-    /// @dev Function to cleanup vault supported tokens and mint corresponding vault tokens to depositor.
-    /// @param _assetList Address list of tokens transfered.
-    /// @param _amount Amount list of tokens transfered.
-    /// @param reciever Address list of transferer.
     function approvedAssetCleanUp(
         address[] memory _assetList,
         uint256[] memory _amount,
@@ -53,10 +53,6 @@ contract SafeUtils is VaultStorage {
         }
     }
 
-    /// @dev Function to pay executor of strategy actions in assets present in vault.
-    /// @param gasCost list of gas costs of transactions.
-    /// @param beneficiary Address list of beneficiary.
-    /// @param gasToken Address list of gasTokens.
     function paybackExecutor(
         uint256[] memory gasCost,
         address[] memory beneficiary,
@@ -88,9 +84,6 @@ contract SafeUtils is VaultStorage {
         }
     }
 
-    /// @dev Function to update token balance in case of any inconsistancy.
-    /// @param _assetList Address list of Assets.
-    /// @param _amount Amount list of Assets.
     function tokenBalanceUpdation(
         address[] memory _assetList,
         uint256[] memory _amount
@@ -100,14 +93,13 @@ contract SafeUtils is VaultStorage {
         }
     }
 
-    /// @dev Function to perform Management fee Calculations in the Vault.
-    function managementFeeCleanUp() public {
+    //TODO managmenet fees
+    function managementFeeCleanUp(address _tokenAddress,uint256 _type) public {
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
-        // Perform delegate call to management fee strategies.
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
             managementFeeStrategies[i].delegatecall(
-                abi.encodeWithSignature("executeSafeCleanUp()")
+                abi.encodeWithSignature("executeSafeCleanUp(address,uint256)",_tokenAddress,_type)
             );
         }
     }

@@ -2,12 +2,12 @@ const HDWalletProvider = require("@truffle/hdwallet-provider");
 require("dotenv").config();
 const package = require("./package");
 const Web3 = require("web3");
-const webSocketProvider = new Web3.providers.WebsocketProvider(
-  process.env.INFURA_TOKEN_WSS
-);
-const mnemonic = process.env.MNEMONIC;
-const token = process.env.INFURA_TOKEN;
-let privateKeys = [process.env.PRIVATE_KEY];
+// const webSocketProvider = new Web3.providers.WebsocketProvider(
+//   process.env.INFURA_TOKEN_WSS
+// );
+// const mnemonic = process.env.MNEMONIC;
+// const token = process.env.INFURA_TOKEN;
+// let privateKeys = [process.env.PRIVATE_KEY];
 
 module.exports = {
   networks: {

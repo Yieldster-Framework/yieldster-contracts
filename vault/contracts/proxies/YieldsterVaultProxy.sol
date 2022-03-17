@@ -1,4 +1,5 @@
-pragma solidity >=0.5.0 <0.7.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.1;
 
 /// @title IProxy - Helper interface to access masterCopy of the Proxy on-chain
 /// @author Richard Meissner - <richard@gnosis.io>
@@ -16,7 +17,7 @@ contract YieldsterVaultProxy {
 
     /// @dev Constructor function sets address of master copy contract.
     /// @param _masterCopy Master copy address.
-    constructor(address _masterCopy) public {
+    constructor(address _masterCopy)  {
         require(
             _masterCopy != address(0),
             "Invalid master copy address provided"
@@ -25,10 +26,10 @@ contract YieldsterVaultProxy {
     }
 
     /// @dev Fallback function forwards all transactions and returns all received return data.
-    function() external payable {
+    fallback() external payable {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
-            let masterCopy := and(
+            let _masterCopy := and(
                 sload(0),
                 0xffffffffffffffffffffffffffffffffffffffff
             )
@@ -37,13 +38,13 @@ contract YieldsterVaultProxy {
                 calldataload(0),
                 0xa619486e00000000000000000000000000000000000000000000000000000000
             ) {
-                mstore(0, masterCopy)
+                mstore(0, _masterCopy)
                 return(0, 0x20)
             }
             calldatacopy(0, 0, calldatasize())
             let success := delegatecall(
-                gas,
-                masterCopy,
+                gas(),
+                _masterCopy,
                 0,
                 calldatasize(),
                 0,

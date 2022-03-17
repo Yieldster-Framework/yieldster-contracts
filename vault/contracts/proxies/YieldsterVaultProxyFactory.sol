@@ -1,4 +1,5 @@
-pragma solidity ^0.5.3;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.1;
 import "./YieldsterVaultProxy.sol";
 import "./IProxyCreationCallback.sol";
 import "../interfaces/IAPContract.sol";
@@ -10,7 +11,7 @@ contract YieldsterVaultProxyFactory {
 
     event ProxyCreation(YieldsterVaultProxy proxy);
 
-    constructor(address _mastercopy, address _APContract) public {
+    constructor(address _mastercopy, address _APContract)  {
         mastercopy = _mastercopy;
         APContract = _APContract;
         owner = msg.sender;
@@ -33,16 +34,14 @@ contract YieldsterVaultProxyFactory {
         returns (YieldsterVaultProxy proxy)
     {
         proxy = new YieldsterVaultProxy(mastercopy);
-        if (data.length > 0)
+        if (data.length > 0) 
             // solium-disable-next-line security/no-inline-assembly
             assembly {
-                if eq(
-                    call(gas, proxy, 0, add(data, 0x20), mload(data), 0, 0),
-                    0
-                ) {
+                if eq(call(gas(), proxy, 0, add(data, 0x20), mload(data), 0, 0),0) {
                     revert(0, 0)
                 }
             }
+        
         IAPContract(APContract).createVault(address(proxy));
         emit ProxyCreation(proxy);
     }

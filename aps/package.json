@@ -20,10 +20,17 @@
   },
   "homepage": "https://github.com/Yieldster-Framework/yieldster-APS#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.1.0",
+    "@chainlink/contracts": "^0.0.11",
+    "@ethersproject/abi": "^5.0.11",
+    "@openzeppelin/contracts": "^4.4.1",
+    "@openzeppelin/contracts-upgradeable": "^4.5.0",
     "@openzeppelin/truffle-upgrades": "^1.6.1",
-    "truffle-contract-size": "^2.0.1",
-    "dotenv": "^8.2.0",
-    "@truffle/hdwallet-provider": "^1.2.6"
+    "@truffle/hdwallet-provider": "^1.7.0",
+    "dotenv": "^8.0.0",
+    "openzeppelin-solidity": "^2.0.0",
+    "shelljs": "^0.8.3",
+    "solc": "^0.8.1",
+    "truffle": "^5.1.59",
+    "truffle-contract-size": "^2.0.1"
   }
 }

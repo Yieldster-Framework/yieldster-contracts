@@ -1,12 +1,20 @@
-pragma solidity >=0.5.0 <0.7.0;
-import "./SelfAuthorized.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.1;
+
 
 /// @title MasterCopy - Base for master copy contracts (should always be first super contract)
 ///         This contract is tightly coupled to our proxy contract (see `proxies/YieldsterVaultProxy.sol`)
 /// @author Richard Meissner - <richard@gnosis.io>
-contract MasterCopy is SelfAuthorized {
+contract MasterCopy  {
     event ChangedMasterCopy(address masterCopy);
 
+    modifier authorized() {
+        require(
+            msg.sender == address(this),
+            "Method can only be called from this contract"
+        );
+        _;
+    }
     // masterCopy always needs to be first declared variable, to ensure that it is at the same location as in the Proxy contract.
     // It should also always be ensured that the address is stored alone (uses a full word)
     address private masterCopy;

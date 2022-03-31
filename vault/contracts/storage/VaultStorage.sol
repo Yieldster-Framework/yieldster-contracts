@@ -34,7 +34,7 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     mapping(address=>bool) internal isAssetPresent;
     address public strategyBeneficiary;
     uint256 public strategyPercentage;
-    
+    uint256 public threshold;
     address public  eth;
     address public wEth;
 

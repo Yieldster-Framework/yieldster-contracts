@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract YieldsterVault is VaultStorage {
-    //already present in vault _storage
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -149,6 +148,7 @@ contract YieldsterVault is VaultStorage {
         );
     }
 
+    
     /// @dev Function to change the APS Manager of the Vault.
     /// @param _vaultAdmin Address of the new APS Manager.
     function changeVaultAdmin(address _vaultAdmin) external onlyNormalMode {
@@ -174,11 +174,17 @@ contract YieldsterVault is VaultStorage {
         );
     }
 
+    function setThreshold(uint256 _threshold) external {
+        _isVaultAdmin();
+        threshold = _threshold;
+    }
+
     /// @dev Function to Deposit assets into the Vault.
     /// @param _tokenAddress Address of the deposit token.
     /// @param _amount Amount of deposit token.
     function deposit(address _tokenAddress, uint256 _amount)
         external
+        payable
         onlyNormalMode
         whenNotPaused
     {
@@ -187,28 +193,26 @@ contract YieldsterVault is VaultStorage {
             IAPContract(APContract).isDepositAsset(_tokenAddress),
             "Not an approved deposit asset"
         );
-
-        //TODO management fee
-        //calculate feeAmountFirst
+        
+        if(_tokenAddress == eth){
+            require(_amount == msg.value,"incorrect value");
+        }
        
-       uint256 amountForFees;
-        // uint256 amountForFees = managementFeeCleanUp(_tokenAddress,1);
-        // require(amountForFees == 0,"not 0");
-        // revert("after management reached");
-        //   managementFeeCleanUp(_tokenAddress);
-
+       
+        managementFeeCleanUp(_tokenAddress);
+       
         (bool result, ) = IAPContract(APContract)
             .getDepositStrategy()
             .delegatecall(
                 abi.encodeWithSignature(
-                    "deposit(address,uint256,uint256)",
+                    "deposit(address,uint256)",
                     _tokenAddress,
-                    _amount,
-                    amountForFees
+                    _amount
                 )
             );
         revertDelegate(result);
     }
+
 
     /// @dev Function to Withdraw assets from the Vault.
     /// @param _tokenAddress Address of the withdraw token.
@@ -228,16 +232,9 @@ contract YieldsterVault is VaultStorage {
             "You don't have enough shares"
         );
 
-        //TODO management fee cleanup
-        // uint256 _amountForFees = managementFeeCleanUp(_tokenAddress,2);
-        // tokenBalances.setTokenBalance(
-        //     _tokenAddress,
-        //     tokenBalances.getTokenBalance(_tokenAddress).sub(_amountForFees)
-        // );
-        //reduce share value based on the fee calculated
 
-        // managementFeeCleanUp(_tokenAddress);
-        //TODO update token balance count
+        managementFeeCleanUp(_tokenAddress);
+
         (bool result, ) = IAPContract(APContract)
             .getWithdrawStrategy()
             .delegatecall(
@@ -259,24 +256,20 @@ contract YieldsterVault is VaultStorage {
         strategyPercentage = _percentage;
     }
 
-    // /// @dev Function to Withdraw shares from the Vault.
-    // /// @param _shares Amount of Vault token shares.
-    // function withdraw(uint256 _shares) external onlyNormalMode {
-    //     _isWhiteListed();
-    //     require(
-    //         balanceOf(msg.sender) >= _shares,
-    //         "You don't have enough shares"
-    //     );
+    
 
-    //     //TODO management fee cleanup
-    //     // managementFeeCleanUp();
-
-    //     (bool result, ) = IAPContract(APContract)
-    //     .getWithdrawStrategy()
-    //     .delegatecall(abi.encodeWithSignature("withdraw(uint256)", _shares));
-    //     revertDelegate(result);
-    // }
-
+    function returnBalance(address _token) internal view returns(uint256){
+        uint256 amount;
+        if(_token == eth){
+            amount = address(this).balance;
+        }else if(_token != address(0)){
+            amount = IERC20(_token).balanceOf(
+                address(this)
+            );
+        }
+        
+        return amount;
+    }
 
 
     /// @dev Function to deposit/withdraw vault assets to protocol
@@ -288,57 +281,95 @@ contract YieldsterVault is VaultStorage {
     function protocolInteraction(
         address _poolAddress,
         bytes calldata _instruction,
-        uint256 _amount,
-        address _fromToken,
-        address _returnToken
-    ) external onlyNormalMode whenNotPaused {
-        require(_poolAddress != address(0), " Pool address is zero address");
-        require(_amount<=tokenBalances.getTokenBalance(_fromToken),"Not enough token present");
-        require( IAPContract(APContract).yieldsterDAO() == msg.sender,"only Yieldster Admin can initiaite this transaction");
+        uint256[] calldata _amount,
+        address[] calldata _fromToken,
+        address[] calldata _returnToken
+    ) external  onlyNormalMode whenPaused{
+      
+        require(IAPContract(APContract).sdkContract() == msg.sender,"only throught sdk");
+        bool operationSatisfied;
+        
+        if(_instruction.length>0)
+            operationSatisfied = true;
+        else if(_poolAddress == IAPContract(APContract).sdkContract())
+            operationSatisfied = true;
+        else
+            operationSatisfied = false;
 
-        //TODO from token 0address, to token 0 address
-    
-        _approveToken(_fromToken, _poolAddress, _amount);
-        uint256 returnTokenAmountBefore = IERC20(_returnToken).balanceOf(
-            address(this)
-        );
-        addToAssetList(_returnToken);
-        (bool result, ) = _poolAddress.call(_instruction);
-        uint256 returnTokenAmountAfter = IERC20(_returnToken).balanceOf(
-            address(this)
-        );
-        tokenBalances.setTokenBalance(
-            _fromToken,
-            tokenBalances.getTokenBalance(_fromToken).sub(_amount)
-        );
-        uint256 amount = returnTokenAmountAfter.sub(returnTokenAmountBefore);
-        tokenBalances.setTokenBalance(
-            _returnToken,
-            tokenBalances.getTokenBalance(_returnToken).add(amount)
-        );
+        require(operationSatisfied,"Not supported operation");
+
+        uint256[] memory returnTokenBalance = new uint256[](_returnToken.length);
+
+        if(_returnToken.length>0){
+            
+            for(uint256 i = 0;i<_returnToken.length;i++){
+                returnTokenBalance[i] = returnBalance(_returnToken[i]);
+                if(_returnToken[i]!=address(0))
+                    addToAssetList(_returnToken[i]);
+            }
+            
+        }
+
+        
+
+        uint256 fromTokenEthAmount;
+
+        if(_fromToken.length>0){
+            require(_fromToken.length == _amount.length,"require same");
+            for(uint256 i = 0; i<_fromToken.length;i++){
+                require(_amount[i]<=tokenBalances.getTokenBalance(_fromToken[i]),"Not enough token present");
+                if(_fromToken[i]!=eth)
+                    _approveToken(_fromToken[i], _poolAddress, _amount[i]);
+                else if(_fromToken[i] == eth)
+                    fromTokenEthAmount = fromTokenEthAmount.add(_amount[i]);
+            }
+
+        }
+
+        bool result;
+        
+       if(fromTokenEthAmount!=0){
+         (result, ) = _poolAddress.call{value : fromTokenEthAmount}(_instruction);   
+       }else if(_fromToken.length>0){
+           if(_instruction.length>0)
+                (result, ) = _poolAddress.call(_instruction);
+       }else{
+           
+           (result, ) = _poolAddress.call(_instruction);
+       }  
+
+        if(_fromToken.length>0){
+            for(uint256 i;i<_fromToken.length;i++){
+                if(_fromToken[i]!=address(0))
+                    tokenBalances.setTokenBalance(
+                    _fromToken[i],
+                    tokenBalances.getTokenBalance(_fromToken[i]).sub(_amount[i])
+            );
+            }
+        }
+
+
+        if(_returnToken.length>0)
+            for(uint256 i =0;i<_returnToken.length;i++){
+                if(_returnToken[i]!=address(0)){
+                    uint256 returnTokenAmountAfter = returnBalance(_returnToken[i]);
+                    tokenBalances.setTokenBalance(
+                    _returnToken[i],
+                    tokenBalances.getTokenBalance(_returnToken[i]).add(returnTokenAmountAfter.sub(returnTokenBalance[i])));
+                }
+                
+            }
+
+        
         revertDelegate(result);
     }
+
 
     /// @dev Function to get list of all the assets deposited to the vault
     function getAssetList() public view returns (address[] memory) {
         return assetList;
     }
 
-    /// @dev Function to exchange tokens using 0x exchange
-    /// @param _toAddress Address of the exchange to token obtained from 0x exchange
-    /// @param _fromToken Address of the exchange from token
-    /// @param _amount Exchange amount
-    /// @param _instruction Encoded exchange instruction from 0x
-    function exchangeTokenUsing0x(
-        address _toAddress,
-        address _fromToken,
-        uint256 _amount,
-        bytes calldata _instruction
-    ) external {
-        _approveToken(_fromToken, _toAddress, _amount);
-        (bool result, ) = _toAddress.call(_instruction);
-        revertDelegate(result);
-    }
 
     /// @dev Function to exchange token using Yieldster exchanges
     /// @param _fromToken Address of the exchange from token
@@ -410,24 +441,16 @@ contract YieldsterVault is VaultStorage {
         return minReturn;
     }
 
+    
 
-
-    function managementFeeCleanUp(address _tokenAddress,uint256 _type) public returns(uint256){
+    function managementFeeCleanUp(address _tokenAddress) public returns(uint256){
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
-        uint256 sum;
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
-            (bool result,bytes memory data) = managementFeeStrategies[i].delegatecall(
-                abi.encodeWithSignature("executeSafeCleanUp(address,uint256)",_tokenAddress,_type)
+            managementFeeStrategies[i].delegatecall(
+                abi.encodeWithSignature("executeSafeCleanUp(address)",_tokenAddress)
             );
-            if(result){
-                uint256 value = abi.decode(data,(uint256));
-                sum = sum.add(value);
-            }else{
-                revert("call failed");
-            }
         }
-        return sum;
     }
 
     
@@ -461,38 +484,8 @@ contract YieldsterVault is VaultStorage {
     }
 
 
-    receive() external payable whenNotPaused {
-        uint256 _share;
-        addToAssetList(eth);
-
-        
-
-
-        uint256 Bal = tokenBalances.getTokenBalance(
-            eth
-        );
-        uint256 ethBal = address(this).balance;
-        uint256 amountBal = ethBal - Bal;
-        updateTokenBalance(
-            eth,
-            amountBal,
-            true
-        );
-        if (totalSupply() == 0) {
-            _share = IHexUtils(IAPContract(APContract).stringUtils())
-                .toDecimals(
-                    wEth,
-                    amountBal
-                );
-        } else {
-            _share = getMintValue(
-                getDepositNAV(
-                    wEth,
-                    amountBal
-                )
-            );
-        }
-        _mint(msg.sender, _share);
+    receive() external payable  {
+       
     }
 
     /// @dev Function to perform operation on Receivel of ERC1155 token from Yieldster Strategy Minter.

@@ -84,14 +84,6 @@ contract SafeUtils is VaultStorage {
         }
     }
 
-    function tokenBalanceUpdation(
-        address[] memory _assetList,
-        uint256[] memory _amount
-    ) public {
-        for (uint256 i = 0; i < _assetList.length; i++) {
-            tokenBalances.setTokenBalance(_assetList[i], _amount[i]);
-        }
-    }
 
     //TODO managmenet fees
     function managementFeeCleanUp(address _tokenAddress,uint256 _type) public {

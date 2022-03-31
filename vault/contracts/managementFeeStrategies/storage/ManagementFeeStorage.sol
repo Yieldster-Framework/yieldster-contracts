@@ -5,7 +5,6 @@ contract ManagementFeeStorage {
     address public manager;
     uint256 platformFee;
 
-
     constructor(uint256 _platformFee) public {
         manager = msg.sender;
         platformFee = _platformFee;

@@ -155,7 +155,7 @@ contract PriceModuleV4 is ChainlinkService, Initializable {
             return (lpPriceBTC.mul(btcToUSD)).div(1e18);
         } else if (tokens[_tokenAddress].tokenType == 9) {
             return
-                IPriceModule(0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c) //Address of ConvexPrice contract.
+                IPriceModule(0x5F660abd9dDFC3f405C370FEeBB48efD7b1788C8) //Address of ConvexPrice contract.
                     .getUSDPrice(_tokenAddress);
         } else revert("Token not present");
     }

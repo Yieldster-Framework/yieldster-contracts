@@ -51,15 +51,12 @@
     "dotenv": "^8.0.0",
     "openzeppelin-solidity": "^2.0.0",
     "shelljs": "^0.8.3",
-    "solc": "^0.8.1",
+    "solc": "0.8.1",
     "truffle": "^5.1.59",
     "truffle-contract-size": "^2.0.1"
   },
   "resolutions": {
     "bitcore-lib": "8.1.1",
     "run-with-testrpc/ganache-cli": "6.3.0"
-  },
-  "devDependencies": {
-    "solc-0.7": "npm:solc@^0.5.17"
   }
 }

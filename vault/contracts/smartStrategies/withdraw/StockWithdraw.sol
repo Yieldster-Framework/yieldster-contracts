@@ -66,29 +66,5 @@ contract StockWithdraw is VaultStorage {
             }
         else
             revert("required asset not present in vault");
-    }
-
-    /// @dev Function to Withdraw shares from the Vault.
-    /// @param _shares Amount of Vault token shares.
-    function withdraw(uint256 _shares) public {
-        uint256 safeTotalSupply = totalSupply();
-        _burn(msg.sender, _shares);
-        
-
-        for (uint256 i = 0; i < assetList.length; i++) {
-            IERC20 token = IERC20(assetList[i]);
-            if (tokenBalances.getTokenBalance(assetList[i]) > 0) {
-                uint256 tokensToGive = (
-                    _shares.mul(tokenBalances.getTokenBalance(assetList[i]))
-                ).div(safeTotalSupply);
-                tokenBalances.setTokenBalance(
-                    assetList[i],
-                    tokenBalances.getTokenBalance(assetList[i]).sub(
-                        tokensToGive
-                    )
-                );
-                token.safeTransfer(msg.sender, tokensToGive);
-            }
-        }
-    }
+    }    
 }

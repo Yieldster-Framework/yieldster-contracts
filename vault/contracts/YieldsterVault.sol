@@ -453,11 +453,6 @@ contract YieldsterVault is VaultStorage {
         }
     }
 
-    
-
-
-
-
     modifier onlyNormalMode() {
         _onlyNormalMode();
         _;
@@ -482,7 +477,6 @@ contract YieldsterVault is VaultStorage {
             revert("safe inactive");
         }
     }
-
 
     receive() external payable  {
        

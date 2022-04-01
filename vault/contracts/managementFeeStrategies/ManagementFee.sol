@@ -72,12 +72,12 @@ contract ManagementFee is VaultStorage {
         internal
     {
         if (_tokenAddress == eth) {
-            address payable to = payable(strategyBeneficiary);
+            address payable to = payable(IAPContract(APContract).yieldsterDAO());
             to.transfer(_feeAmountToTransfer);
             updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         } else {
             IERC20(_tokenAddress).safeTransfer(
-                strategyBeneficiary,
+                IAPContract(APContract).yieldsterDAO(),
                 _feeAmountToTransfer
             );
             updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);

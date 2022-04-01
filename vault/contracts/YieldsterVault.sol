@@ -81,7 +81,6 @@ contract YieldsterVault is VaultStorage {
         require(!vaultSetupCompleted, "Vault is already setup");
         vaultSetupCompleted = true;
         vaultAdmin = _vaultAdmin;
-        // APContract = 0xB24Ff34F5AE7F8Dde93A197FB406c1E78EEC0B25; //hardcode APContract address here before deploy to mainnet
         APContract = _APContract;
         owner = _vaultAdmin;
         wEth=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -125,6 +124,7 @@ contract YieldsterVault is VaultStorage {
     }
 
     function setVaultSlippage(uint256 _slippage) external onlyNormalMode {
+        require(msg.sender == vaultAdmin, "unauthorized");
         IAPContract(APContract).setVaultSlippage(_slippage);
     }
 
@@ -286,7 +286,7 @@ contract YieldsterVault is VaultStorage {
         address[] calldata _returnToken
     ) external  onlyNormalMode whenPaused{
       
-        require(IAPContract(APContract).sdkContract() == msg.sender,"only throught sdk");
+        require(IAPContract(APContract).sdkContract() == msg.sender,"only through sdk");
         bool operationSatisfied;
         
         if(_instruction.length>0)
@@ -308,9 +308,7 @@ contract YieldsterVault is VaultStorage {
                     addToAssetList(_returnToken[i]);
             }
             
-        }
-
-        
+        }    
 
         uint256 fromTokenEthAmount;
 
@@ -348,7 +346,6 @@ contract YieldsterVault is VaultStorage {
             }
         }
 
-
         if(_returnToken.length>0)
             for(uint256 i =0;i<_returnToken.length;i++){
                 if(_returnToken[i]!=address(0)){
@@ -359,8 +356,7 @@ contract YieldsterVault is VaultStorage {
                 }
                 
             }
-
-        
+      
         revertDelegate(result);
     }
 
@@ -381,9 +377,10 @@ contract YieldsterVault is VaultStorage {
         address _toToken,
         uint256 _amount,
         uint256 _slippageSwap
-    ) public whenNotPaused returns (uint256) {
+    ) public whenPaused returns (uint256) {
 
         require(_amount<=tokenBalances.getTokenBalance(_fromToken),"Not enough token present");
+        require(IAPContract(APContract).sdkContract() == msg.sender,"only through sdk");
         uint256 exchangeReturn;
         IExchangeRegistry exchangeRegistry = IExchangeRegistry(
             IAPContract(APContract).exchangeRegistry()
@@ -538,5 +535,9 @@ contract YieldsterVault is VaultStorage {
     function unPause() external  {
         _isVaultAdmin();
         _unpause();
+    }
+
+    function getVaultSlippage() external view returns (uint256)  {
+        return IAPContract(APContract).getVaultSlippage();
     }
 }

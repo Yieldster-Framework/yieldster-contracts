@@ -16,6 +16,7 @@ contract StockDeposit is VaultStorage {
         uint256 _share;
         address tokenAddress;
         IERC20 token;
+        address wEth = IAPContract(APContract).getWETH();
         if(_tokenAddress == eth)
             tokenAddress = wEth;
         else{

@@ -83,14 +83,8 @@ contract YieldsterVault is VaultStorage {
         vaultAdmin = _vaultAdmin;
         APContract = _APContract;
         owner = _vaultAdmin;
-        wEth=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
         eth=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
         tokenBalances = new TokenBalanceStorage();
-    }
-
-    function changeWethAddress(address _wEth) external {
-        _isVaultAdmin();
-        wEth = _wEth;
     }
 
     function transferOwnership(address _owner) external{

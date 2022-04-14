@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-
 /// @title The platform management fee contract for Yieldster
 /// @author Yieldster
 /// @notice For each transaction that changes the vault's nav, this contract has the business logic to transfer a certain portion of the deposit/withdrawals to YieldsterDAO
@@ -29,6 +28,7 @@ contract ManagementFee is VaultStorage {
             if (tokenBalances.getTokenBalance(_tokenAddress) > threshold) {
                 for (uint256 i = 0; i < assetList.length; i++) {
                     if (_feeInUSD != 0) {
+                        address wEth = IAPContract(APContract).getWETH();
                         address tokenAddress;
                         if (assetList[i] == eth) tokenAddress = wEth;
                         else tokenAddress = assetList[i];
@@ -72,7 +72,9 @@ contract ManagementFee is VaultStorage {
         internal
     {
         if (_tokenAddress == eth) {
-            address payable to = payable(IAPContract(APContract).yieldsterDAO());
+            address payable to = payable(
+                IAPContract(APContract).yieldsterDAO()
+            );
             to.transfer(_feeAmountToTransfer);
             updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         } else {
@@ -90,6 +92,7 @@ contract ManagementFee is VaultStorage {
         returns (uint256, uint256)
     {
         uint256 vaultNAV = getVaultNAV();
+        address wEth = IAPContract(APContract).getWETH();
         ManagementFeeStorage mStorage = ManagementFeeStorage(
             0x19c4b4c2d5CAce9b3e3a3A37576F46e5Ad08E421
         );
@@ -133,9 +136,9 @@ contract ManagementFee is VaultStorage {
         }
     }
 
-/// @notice This function is called for each deposit and withdrawal
-/// @dev Delegate calls are made from the vault to this function.
-/// @param _tokenAddress the deposit/withdrawal token
+    /// @notice This function is called for each deposit and withdrawal
+    /// @dev Delegate calls are made from the vault to this function.
+    /// @param _tokenAddress the deposit/withdrawal token
     function executeSafeCleanUp(address _tokenAddress)
         public
         payable

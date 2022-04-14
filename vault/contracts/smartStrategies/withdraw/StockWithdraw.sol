@@ -5,10 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract StockWithdraw is VaultStorage {
-   
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-
 
     function updateAndTransferTokens(
         address tokenAddress,
@@ -21,16 +19,13 @@ contract StockWithdraw is VaultStorage {
             tokenBalances.getTokenBalance(tokenAddress).sub(updatedBalance)
         );
         _burn(msg.sender, shares);
-        if(tokenAddress==eth){
+        if (tokenAddress == eth) {
             address payable to = payable(msg.sender);
             to.transfer(transferAmount);
-        }
-        else{
+        } else {
             IERC20(tokenAddress).safeTransfer(msg.sender, transferAmount);
         }
     }
-
-    
 
     /// @dev Function to Withdraw assets from the Vault.
     /// @param _tokenAddress Address of the withdraw token.
@@ -39,32 +34,31 @@ contract StockWithdraw is VaultStorage {
         addToAssetList(_tokenAddress);
         uint256 tokenCountDecimals;
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
-        if(_tokenAddress==eth){
+        address wEth = IAPContract(APContract).getWETH();
+        if (_tokenAddress == eth) {
             uint256 tokenCount = (
-            (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
-        ).div(tokenUSD);
-         tokenCountDecimals = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).fromDecimals(wEth, tokenCount);
-
+                (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
+            ).div(tokenUSD);
+            tokenCountDecimals = IHexUtils(
+                IAPContract(APContract).stringUtils()
+            ).fromDecimals(wEth, tokenCount);
+        } else {
+            uint256 tokenCount = (
+                (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
+            ).div(tokenUSD);
+            tokenCountDecimals = IHexUtils(
+                IAPContract(APContract).stringUtils()
+            ).fromDecimals(_tokenAddress, tokenCount);
         }
-        else{
-        uint256 tokenCount = (
-            (_shares.mul(getVaultNAV())).div(totalSupply()).mul(1e18)
-        ).div(tokenUSD);
-         tokenCountDecimals = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).fromDecimals(_tokenAddress, tokenCount);
-        }
-        if (tokenCountDecimals <= tokenBalances.getTokenBalance(_tokenAddress))
-            {
-                updateAndTransferTokens(
+        if (
+            tokenCountDecimals <= tokenBalances.getTokenBalance(_tokenAddress)
+        ) {
+            updateAndTransferTokens(
                 _tokenAddress,
                 tokenCountDecimals,
                 _shares,
-                tokenCountDecimals);
-            }
-        else
-            revert("required asset not present in vault");
-    }    
+                tokenCountDecimals
+            );
+        } else revert("required asset not present in vault");
+    }
 }

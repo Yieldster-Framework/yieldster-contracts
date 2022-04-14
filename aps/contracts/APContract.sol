@@ -687,4 +687,12 @@ contract APContract is  Initializable{
     function isVault( address _address) public view returns(bool){
        return vaults[_address].created;
     }
+
+    function getWETH() external view returns (address) {
+        return wEth;
+    }
+
+    function setWETH(address _wEth) external onlyYieldsterDAO returns (address) {
+        wEth = _wEth;
+    }
 }

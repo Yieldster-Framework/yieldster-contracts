@@ -36,7 +36,6 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     uint256 public strategyPercentage;
     uint256 public threshold;
     address public  eth;
-    address public wEth;
 
     TokenBalanceStorage tokenBalances;
 
@@ -73,6 +72,7 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     function getVaultNAV() public view returns (uint256) {
        
         uint256 nav = 0;
+        address wEth = IAPContract(APContract).getWETH();
         for (uint256 i = 0; i < assetList.length; i++) {
 
 

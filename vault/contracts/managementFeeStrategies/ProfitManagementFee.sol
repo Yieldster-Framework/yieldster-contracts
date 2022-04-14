@@ -23,6 +23,7 @@ contract ProfitManagementFee is VaultStorage {
         returns (uint256)
     {
         uint256 currentVaultNAV = getVaultNAV();
+        address wEth = IAPContract(APContract).getWETH();
         (uint256 feeAmountToTransfer, uint256 feeInUSD) = calculateFee(
             _tokenAddress
         );

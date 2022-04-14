@@ -59,8 +59,12 @@ contract SafeUtils is VaultStorage {
                     }
 
                     if (unmintedShare >= _amount[i]) {
+                        address _tokenAddress;
+                        if (_assetList[i] == eth)
+                            _tokenAddress = IAPContract(APContract).getWETH();
+                        else _tokenAddress = _assetList[i];
                         uint256 tokensToBeMinted = getMintValue(
-                            getDepositNAV(_assetList[i], _amount[i])
+                            getDepositNAV(_tokenAddress, _amount[i])
                         );
                         _mint(reciever[i], tokensToBeMinted);
                         tokenBalances.setTokenBalance(

@@ -29,4 +29,5 @@ interface IAPContract {
     function safeUtils() external returns (address);
     function getStrategyFromMinter(address) external view returns (address);
     function sdkContract() external returns (address);
+    function getWETH()external view returns(address);
 }

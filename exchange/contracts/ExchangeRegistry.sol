@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 contract ExchangeRegistry {
     address owner; // Address of exchange Registry owner.
     mapping(address => mapping(address => address)) swapContracts; // Mapping to store the exchange contract address for From Token to To Token, From Token -> To Token -> Exchange contract.
-
+constructor(){
+        owner = msg.sender;
+    }
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner allowed");
         _;

@@ -79,6 +79,12 @@ contract APContract is  Initializable{
 
     mapping(address => vaultActiveManagemetFee) managementFeeStrategies;
 
+    /// @dev Function to initialize addresses.
+    /// @param _yieldsterDAO Address of yieldsterDAO.
+    /// @param _yieldsterTreasury Address of yieldsterTreasury.
+    /// @param _yieldsterGOD Address of yieldsterGOD.
+    /// @param _emergencyVault Address of emergencyVault.
+    /// @param _vaultAdmin Address of vaultAdmin.
     function initialize(
         address _yieldsterDAO, 
         address _yieldsterTreasury,
@@ -96,6 +102,15 @@ contract APContract is  Initializable{
         vaultAdmins[_vaultAdmin] = true;
     }
 
+    /// @dev Function to set initial values.
+    /// @param _whitelistModule Address of whitelistModule.
+    /// @param _platformManagementFee Address of platformManagementFee.
+    /// @param _profitManagementFee Address of profitManagementFee.
+    /// @param _stringUtils Address of stringUtils.
+    /// @param _yieldsterExchange Address of yieldsterExchange.
+    /// @param _exchangeRegistry Address of exchangeRegistry.
+    /// @param _priceModule Address of priceModule.
+    /// @param _safeUtils Address of safeUtils.
     function setInitialValues(
         address _whitelistModule,
         address _platformManagementFee,
@@ -281,7 +296,9 @@ contract APContract is  Initializable{
         return IPriceModule(priceModule).getUSDPrice(_tokenAddress);
     }
 
-
+    /// @dev Function to set Management Fee Strategies.
+    /// @param _platformManagement Address of the Platform Management Fee Strategy
+    /// @param _profitManagement Address of the Profit Management Fee Strategy
     function setProfitAndPlatformManagementFeeStrategies(
         address _platformManagement,
         address _profitManagement
@@ -324,6 +341,7 @@ contract APContract is  Initializable{
     }
 
     /// @dev Function to deactivate a vault strategy.
+    /// @param _vaultAddress Address of the Vault.
     /// @param _managementFeeAddress Address of the Management Fee Strategy.
     function removeManagementFeeStrategies(
         address _vaultAddress,
@@ -574,6 +592,8 @@ contract APContract is  Initializable{
 
     /// @dev Function to add a smart strategy to Yieldster.
     /// @param _smartStrategyAddress Address of the smart strategy.
+    /// @param _minter Address of the strategy minter.
+    /// @param _executor Address of the strategy executor.
     function addSmartStrategy(
         address _smartStrategyAddress,
         address _minter,
@@ -684,14 +704,18 @@ contract APContract is  Initializable{
         _;
     }
 
+    /// @dev Function to check if an address is an Yieldster Vault.
+    /// @param _address Address to check.
     function isVault( address _address) public view returns(bool){
        return vaults[_address].created;
     }
 
+    /// @dev Function to get wEth Address.
     function getWETH() external view returns (address) {
         return wEth;
     }
-
+     /// @dev Function to set wEth Address.
+    /// @param _address Address of wEth.
     function setWETH(address _wEth) external onlyYieldsterDAO returns (address) {
         wEth = _wEth;
     }

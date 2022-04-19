@@ -79,6 +79,9 @@ contract ProfitManagementFee is VaultStorage {
         return feeAmountToTransfer;
     }
 
+    /// @dev Function to transfer fee to strategyBeneficiary.
+    /// @param _tokenAddress Address of token on which fee has to be given.
+    /// @param _feeAmountToTransfer Amount of fee to transfer(amount of tokens).
     function transferFee(address _tokenAddress, uint256 _feeAmountToTransfer)
         internal
     {
@@ -95,6 +98,8 @@ contract ProfitManagementFee is VaultStorage {
         }
     }
 
+    /// @dev Function to calculate fee.
+    /// @param _tokenAddress Address of token on which fee has to be calculated.
     function calculateFee(address _tokenAddress)
         public
         view

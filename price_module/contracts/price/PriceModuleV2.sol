@@ -23,6 +23,7 @@ contract PriceModuleV2 is ChainlinkService, Initializable {
 
     mapping(address => Token) tokens; // Mapping from address to Token Information
 
+    /// @dev Function to initialize priceModuleManager and curveAddressProvider.
     function initialize() public {
         priceModuleManager = msg.sender;
         curveAddressProvider = 0x0000000022D53366457F9d5E68Ec105046FC4383;

@@ -34,6 +34,10 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to cleanup vault supported tokens and mint corresponding vault tokens to depositor.
+    /// @param _assetList Address list of tokens transfered.
+    /// @param _amount Amount list of tokens transfered.
+    /// @param reciever Address list of transferer.
     function approvedAssetCleanUp(
         address[] memory _assetList,
         uint256[] memory _amount,
@@ -79,6 +83,11 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+
+    /// @dev Function to pay executor of strategy actions in assets present in vault.
+    /// @param gasCost list of gas costs of transactions.
+    /// @param beneficiary Address list of beneficiary.
+    /// @param gasToken Address list of gasTokens.
     function paybackExecutor(
         uint256[] memory gasCost,
         address[] memory beneficiary,
@@ -97,6 +106,9 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to perform Management fee Calculations in the Vault.
+    /// @param _tokenAddress Address of the token in which fee has to be given.
+    /// @param _type Type OF CleanUp.
     function managementFeeCleanUp(address _tokenAddress, uint256 _type) public {
         address[] memory managementFeeStrategies = IAPContract(APContract)
             .getVaultManagementFee();
@@ -111,6 +123,9 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to update token balance in case of any inconsistancy.
+    /// @param _assetList Address list of Assets.
+    /// @param _amount Amount list of Assets.
     function tokenBalanceUpdation(
         address[] memory _assetList,
         uint256[] memory _amount
@@ -120,11 +135,16 @@ contract SafeUtils is VaultStorage {
         }
     }
 
+    /// @dev Function to process Ether amount and send to beneficiary.
+    /// @param _etherAmount Amount of ether.
+    /// @param _beneficiary Address of beneficiary.
     function processEther(uint256 _etherAmount, address _beneficiary) internal {
         address payable to = payable(_beneficiary);
         to.transfer(_etherAmount);
     }
 
+    /// @dev Function to process Cleanup and send value to yieldsterTreasury.
+    /// @param _asset Address of Asset on which cleanUp has to be performed.
     function processCleanup(address _asset) internal {
         if (_asset == eth) {
             uint256 amount = address(this).balance;

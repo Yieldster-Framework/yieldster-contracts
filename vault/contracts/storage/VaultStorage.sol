@@ -42,6 +42,8 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     
     
     //TODO verify if this code has to be used for this fn
+    /// @dev Function to revert in case of low level call fail.
+    /// @param _delegateStatus Boolean indicating the status of low level call.
     function revertDelegate(bool _delegateStatus) internal pure{
         if(!_delegateStatus){
             assembly{
@@ -53,11 +55,15 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
         }
     }
 
+    /// @dev Function to get the balance of token from tokenBalances.
+    /// @param _tokenAddress Address of the token.
     function getTokenBalance(address _tokenAddress) external view returns (uint256)
     {
         return tokenBalances.getTokenBalance(_tokenAddress);
     }
 
+    /// @dev Function to add a token to assetList.
+    /// @param _asset Address of the asset.
     function addToAssetList(address _asset) internal{
         require(_asset!=address(0),"invalid asset address");
         if(!isAssetPresent[_asset]){
@@ -70,7 +76,6 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
 
      /// @dev Function to return the NAV of the Vault.
     function getVaultNAV() public view returns (uint256) {
-       
         uint256 nav = 0;
         address wEth = IAPContract(APContract).getWETH();
         for (uint256 i = 0; i < assetList.length; i++) {
@@ -100,6 +105,10 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
         return nav.div(1e18);
     }
 
+    /// @dev Function to approve ERC20 token to the spendor.
+    /// @param _token Address of the Token.
+    /// @param _spender Address of the Spendor.
+    /// @param _amount Amount of the tokens.
     function _approveToken(
         address _token,
         address _spender,
@@ -147,7 +156,10 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     
 
     
-
+    /// @dev Function to update token balance in tokenBalances.
+    /// @param tokenAddress Address of the Token.
+    /// @param tokenAmount Amount of the tokens.
+    /// @param isAddition Boolean indicating if token addition or substraction.
     function updateTokenBalance(
         address tokenAddress,
         uint256 tokenAmount,

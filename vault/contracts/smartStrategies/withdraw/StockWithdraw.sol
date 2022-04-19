@@ -8,6 +8,11 @@ contract StockWithdraw is VaultStorage {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// @dev Function to update token balance and transfer them to the msg.sender.
+    /// @param tokenAddress Address of the token.
+    /// @param updatedBalance New token balance.
+    /// @param shares Amount of shares to be burned.
+    /// @param transferAmount Amount of token to be transferred.
     function updateAndTransferTokens(
         address tokenAddress,
         uint256 updatedBalance,

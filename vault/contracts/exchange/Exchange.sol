@@ -44,6 +44,11 @@ contract Exchange is VaultStorage {
         return 0;
     }
 
+
+    /// @dev Function to calculate the slippage accounted min return for an exchange operation.
+    /// @param fromToken Address of the from token.
+    /// @param toToken Address of the to token.
+    /// @param amount Amount of the from token.
     function calculateSlippage(
         address fromToken,
         address toToken,

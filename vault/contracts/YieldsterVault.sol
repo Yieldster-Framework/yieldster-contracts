@@ -9,7 +9,8 @@ contract YieldsterVault is VaultStorage {
     using SafeMath for uint256;
 
 
-    /// @dev Function to upgrade the vault.
+    /// @dev Function to upgrade the mastercopy of Yieldster Vault.
+    /// @param _mastercopy Address of new mastercopy of Yieldster Vault.
     function upgradeMasterCopy(address _mastercopy) external {
         _isYieldsterGOD();
         (bool result, ) = address(this).call(
@@ -19,6 +20,7 @@ contract YieldsterVault is VaultStorage {
     }
 
     /// @dev Function to set APS Address.
+    /// @param _APContract Address of Yieldster APS contract.
     function setAPS(address _APContract) external {
         _isYieldsterGOD();
         APContract = _APContract;
@@ -31,6 +33,7 @@ contract YieldsterVault is VaultStorage {
         else if (emergencyConditions == 0) emergencyConditions = 1;
     }
 
+    /// @dev Function to enable Emergency Exit feature of the Vault.
     function enableEmergencyExit() external {
         _isYieldsterGOD();
         emergencyConditions = 2;
@@ -73,10 +76,9 @@ contract YieldsterVault is VaultStorage {
         IAPContract(APContract).addVault(vaultAdmin, whiteListGroups);
     }
 
-    // / @dev Setup function sets initial storage of contract.
-    // / @param _vaultAdmin Address of the Vault APS Manager.
-    // / @param _owner Address of the Vault owner.
-    // / @param _APContract Address of apcontract
+    /// @dev Setup function sets initial storage of contract.
+    /// @param _APContract Address of apcontract.
+    /// @param _vaultAdmin Address of the Vault APS Manager.
     function setup(address _APContract, address _vaultAdmin) external {
         require(!vaultSetupCompleted, "Vault is already setup");
         vaultSetupCompleted = true;
@@ -87,12 +89,15 @@ contract YieldsterVault is VaultStorage {
         tokenBalances = new TokenBalanceStorage();
     }
 
+    /// @dev Function to transfer ownership.
+    /// @param _owner Address of the new owner.
     function transferOwnership(address _owner) external{
         require(msg.sender == owner, "unauthorized");
         owner = _owner;
     }
 
-
+    /// @dev Function to add whiteListGroups.
+    /// @param _whiteListGroups List of whiteListGroups to be added.
     function addWhiteListGroups(uint256[] memory _whiteListGroups) external {
         _isVaultAdmin();
         for (uint256 i = 0; i < _whiteListGroups.length; i++) {
@@ -103,6 +108,8 @@ contract YieldsterVault is VaultStorage {
         }
     }
 
+    /// @dev Function to remove whiteListGroups.
+    /// @param _whiteListGroups List of whiteListGroups to be removed.
     function removeWhiteListGroups(uint256[] memory _whiteListGroups) external {
         _isVaultAdmin();
         for (uint256 i = 0; i < _whiteListGroups.length; i++) {
@@ -110,6 +117,9 @@ contract YieldsterVault is VaultStorage {
         }
     }
 
+    /// @dev Function to set TokenDetails.
+    /// @param _tokenName Token Name.
+    /// @param _symbol Token Symbol.
     function setTokenDetails(string memory _tokenName, string memory _symbol)
         external
     {
@@ -117,6 +127,8 @@ contract YieldsterVault is VaultStorage {
         setupToken(_tokenName, _symbol);
     }
 
+    /// @dev Function to set Slippage percentage of the vault.
+    /// @param _slippage Slippage percentage.
     function setVaultSlippage(uint256 _slippage) external onlyNormalMode {
         require(msg.sender == vaultAdmin, "unauthorized");
         IAPContract(APContract).setVaultSlippage(_slippage);
@@ -168,6 +180,8 @@ contract YieldsterVault is VaultStorage {
         );
     }
 
+    /// @dev Function to set threshold Vaule.
+    /// @param _threshold minimum threshold of an asset in vault.
     function setThreshold(uint256 _threshold) external {
         _isVaultAdmin();
         threshold = _threshold;
@@ -241,6 +255,9 @@ contract YieldsterVault is VaultStorage {
         revertDelegate(result);
     }
 
+    /// @dev Function to set Beneficiary Address and Percentage.
+    /// @param _beneficiary strategy beneficiary to which profit fee is given.
+    /// @param _percentage percentage of profit fee to be given.
     function setBeneficiaryAndPercentage(
         address _beneficiary,
         uint256 _percentage
@@ -251,7 +268,8 @@ contract YieldsterVault is VaultStorage {
     }
 
     
-
+    /// @dev Function to return balance amount in vault.
+    /// @param _token Address of token whose balance amount has to be returned.
     function returnBalance(address _token) internal view returns(uint256){
         uint256 amount;
         if(_token == eth){
@@ -408,7 +426,11 @@ contract YieldsterVault is VaultStorage {
         return exchangeReturn;
     }
 
-    /// @dev function to get minimum return amount accordin to slippage
+    /// @dev function to calculate the slippage value accounted min return for an exchange operation.
+    /// @param fromToken Address of From token
+    /// @param toToken Address of To token
+    /// @param amount amount of From token
+    /// @param slippagePercent slippage Percentage
     function calculateSlippage(
         address fromToken,
         address toToken,
@@ -433,7 +455,8 @@ contract YieldsterVault is VaultStorage {
     }
 
     
-
+    /// @dev Function to perform Management fee Calculations in the Vault.
+    /// @param _tokenAddress Address of token on which managementFeeCleanUp has to be performed
     function managementFeeCleanUp(address _tokenAddress) public returns(uint256){
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
@@ -449,10 +472,12 @@ contract YieldsterVault is VaultStorage {
         _;
     }
 
+    /// @dev Function to check if msg.sender is VaultAdmin.
     function _isVaultAdmin() private view {
         require(msg.sender == vaultAdmin, "not vaultAdmin");
     }
 
+    /// @dev Function to check if msg.sender is yieldsterGOD.
     function _isYieldsterGOD() private view {
         require(
             msg.sender == IAPContract(APContract).yieldsterGOD(),
@@ -474,6 +499,8 @@ contract YieldsterVault is VaultStorage {
     }
 
     /// @dev Function to perform operation on Receivel of ERC1155 token from Yieldster Strategy Minter.
+    /// @param id Number denoting the type of instruction. 1 = safe Minter, 2 = strategy minter, 3 = deposit strategy minter, 4 = withdrawal strategy minter.
+    /// @param data Bytes containing encoded function call.
     function onERC1155Received(
         address,
         address,
@@ -520,17 +547,19 @@ contract YieldsterVault is VaultStorage {
             );
     }
 
-
+    /// @dev Function to pause a function.
     function toPause() external {
         _isVaultAdmin();
         _pause();
     }
 
+    /// @dev Function to unpause a function.
     function unPause() external  {
         _isVaultAdmin();
         _unpause();
     }
 
+    /// @dev Function to getVaultSlippage.
     function getVaultSlippage() external view returns (uint256)  {
         return IAPContract(APContract).getVaultSlippage();
     }

@@ -15,6 +15,10 @@ contract ManagementFee is VaultStorage {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// @dev Function to process platform fee acquired by Yieldster.
+    /// @param _feeAmountToTransfer Amount of fee to transfer(amount of tokens).
+    /// @param _tokenAddress Address of token on which fee has to be given.
+    /// @param _feeInUSD value of token is USD .
     function processPlatformFee(
         uint256 _feeAmountToTransfer,
         address _tokenAddress,
@@ -68,6 +72,9 @@ contract ManagementFee is VaultStorage {
         }
     }
 
+    /// @dev Function to transfer fee to yieldster DAO.
+    /// @param _tokenAddress Address of token on which fee has to be given.
+    /// @param _feeAmountToTransfer Amount of fee to transfer(amount of tokens).
     function transferFee(address _tokenAddress, uint256 _feeAmountToTransfer)
         internal
     {
@@ -86,6 +93,9 @@ contract ManagementFee is VaultStorage {
         }
     }
 
+    /// @dev Function to calculate feeAmount.
+    /// @param blockDifference No of blocks after last transaction in which management fees were paid.
+    /// @param _tokenAddress Address of token.
     function feeAmount(uint256 blockDifference, address _tokenAddress)
         public
         view
@@ -116,6 +126,8 @@ contract ManagementFee is VaultStorage {
         return (tokenCountDecimals, platformNavInterest);
     }
 
+    /// @dev Function to calculate fee.
+    /// @param _tokenAddress Address of token on which fee has to be calculated.
     function calculateFee(address _tokenAddress)
         public
         returns (uint256, uint256)

@@ -63,13 +63,16 @@ contract SafeUtils is VaultStorage {
                     }
 
                     if (unmintedShare >= _amount[i]) {
-                        address _tokenAddress;
-                        if (_assetList[i] == eth)
-                            _tokenAddress = IAPContract(APContract).getWETH();
-                        else _tokenAddress = _assetList[i];
-                        uint256 tokensToBeMinted = getMintValue(
-                            getDepositNAV(_tokenAddress, _amount[i])
-                        );
+                        uint256 tokensToBeMinted;
+                        if (_assetList[i] == eth) {
+                            tokensToBeMinted = getMintValue(
+                                getDepositNAV(wEth, _amount[i])
+                            );
+                        } else {
+                            tokensToBeMinted = getMintValue(
+                                getDepositNAV(_assetList[i], _amount[i])
+                            );
+                        }
                         _mint(reciever[i], tokensToBeMinted);
                         tokenBalances.setTokenBalance(
                             _assetList[i],
@@ -102,7 +105,12 @@ contract SafeUtils is VaultStorage {
                 gasToken[i],
                 tokenBalances.getTokenBalance(gasToken[i]).sub(gasCost[i])
             );
-            IERC20(gasToken[i]).safeTransfer(beneficiary[i], gasCost[i]);
+            if (gasToken[i] == eth) {
+                address payable to = payable(beneficiary[i]);
+                to.transfer(gasCost[i]);
+            } else {
+                IERC20(gasToken[i]).safeTransfer(beneficiary[i], gasCost[i]);
+            }
         }
     }
 

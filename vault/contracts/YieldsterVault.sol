@@ -33,19 +33,29 @@ contract YieldsterVault is VaultStorage {
         else if (emergencyConditions == 0) emergencyConditions = 1;
     }
 
-    /// @dev Function to enable Emergency Exit feature of the Vault.
+    /// @dev Function to enable emergency exit.
     function enableEmergencyExit() external {
         _isYieldsterGOD();
         emergencyConditions = 2;
         for (uint256 i = 0; i < assetList.length; i++) {
-            IERC20 token = IERC20(assetList[i]);
-            uint256 tokenBalance = token.balanceOf(address(this));
-            if (tokenBalance > 0) {
-                token.safeTransfer(
-                    IAPContract(APContract).emergencyVault(),
-                    tokenBalance
-                );
+            if(assetList[i] == eth){
+                uint256 tokenBalance = address(this).balance;
+                if(tokenBalance >0){
+                    address payable to = payable(IAPContract(APContract).emergencyVault());
+                    to.transfer(tokenBalance);
+                }
             }
+            else{
+                IERC20 token = IERC20(assetList[i]);
+                uint256 tokenBalance = token.balanceOf(address(this));
+                if (tokenBalance > 0) {
+                    token.safeTransfer(
+                        IAPContract(APContract).emergencyVault(),
+                        tokenBalance
+                    );
+                }
+            }
+            
         }
     }
 
@@ -284,7 +294,7 @@ contract YieldsterVault is VaultStorage {
     }
 
 
-    /// @dev Function to deposit/withdraw vault assets to protocol
+     /// @dev Function to deposit/withdraw vault assets to protocol
     /// @param _poolAddress Address of the protocol
     /// @param _instruction Encoded instruction to perform protocol deposit of vault tokens
     /// @param _amount Amount to be deposited to the protocol
@@ -320,7 +330,9 @@ contract YieldsterVault is VaultStorage {
                     addToAssetList(_returnToken[i]);
             }
             
-        }    
+        }
+
+        
 
         uint256 fromTokenEthAmount;
 
@@ -343,6 +355,8 @@ contract YieldsterVault is VaultStorage {
        }else if(_fromToken.length>0){
            if(_instruction.length>0)
                 (result, ) = _poolAddress.call(_instruction);
+            else
+                result = true;
        }else{
            
            (result, ) = _poolAddress.call(_instruction);
@@ -358,6 +372,7 @@ contract YieldsterVault is VaultStorage {
             }
         }
 
+
         if(_returnToken.length>0)
             for(uint256 i =0;i<_returnToken.length;i++){
                 if(_returnToken[i]!=address(0)){
@@ -368,9 +383,11 @@ contract YieldsterVault is VaultStorage {
                 }
                 
             }
-      
+
+        
         revertDelegate(result);
     }
+
 
 
     /// @dev Function to get list of all the assets deposited to the vault

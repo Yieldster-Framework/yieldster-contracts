@@ -31,6 +31,7 @@
     "shelljs": "^0.8.3",
     "solc": "^0.8.1",
     "truffle": "^5.1.59",
-    "truffle-contract-size": "^2.0.1"
+    "truffle-contract-size": "^2.0.1",
+    "@openzeppelin/test-helpers": "^0.5.15"
   }
 }

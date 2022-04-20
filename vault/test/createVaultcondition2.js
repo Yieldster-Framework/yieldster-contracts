@@ -198,13 +198,10 @@ contract("Yieldster Vault", function (accounts) {
             }
         })
 
-        it("direct transfer 10 dai", async () => {                  //check
+        it("direct transfer 10 dai", async () => {                  
             assert.equal(100, convertUtils.from18((await testVault.getTokenBalance(dai.address)).toString()))
-            console.log("203")
             assert.equal(0, convertUtils.from18((await dai.balanceOf(testVault.address)).toString()))
-            console.log("204")
             await dai.transfer(testVault.address,convertUtils.to18("10"),{from: accounts[0]});
-            console.log("207")
             assert.equal(100, convertUtils.from18((await testVault.getTokenBalance(dai.address)).toString()))
             assert.equal(10, convertUtils.from18((await dai.balanceOf(testVault.address)).toString()))
         })

@@ -102,12 +102,14 @@ contract ManagementFee is VaultStorage {
         returns (uint256, uint256)
     {
         uint256 vaultNAV = getVaultNAV();
-        address wEth = IAPContract(APContract).getWETH();
         ManagementFeeStorage mStorage = ManagementFeeStorage(
             0x19c4b4c2d5CAce9b3e3a3A37576F46e5Ad08E421
         );
         address tokenAddress = _tokenAddress;
-        if (_tokenAddress == eth) tokenAddress = wEth;
+        if (_tokenAddress == eth) {
+            address wEth = IAPContract(APContract).getWETH();
+            tokenAddress = wEth;
+        }
         uint256 platformFee = mStorage.getPlatformFee();
         uint256 platformNavInterest = vaultNAV
             .mul(blockDifference.mul(1e18))

@@ -698,7 +698,7 @@ contract APContract is  Initializable{
     }
     /// @dev Function to set wEth Address.
     /// @param _wEth Address of wEth.
-    function setWETH(address _wEth) external onlyYieldsterDAO returns (address) {
+    function setWETH(address _wEth) external onlyYieldsterDAO{
         wEth = _wEth;
     }
 }

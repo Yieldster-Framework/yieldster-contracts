@@ -105,6 +105,7 @@ contract ProfitManagementFee is VaultStorage {
         view
         returns (uint256, uint256)
     {
+        address wEth = IAPContract(APContract).getWETH();
         address tokenAddress = _tokenAddress;
         if (_tokenAddress == eth) tokenAddress = wEth;
         uint256 currentVaultNAV = getVaultNAV();

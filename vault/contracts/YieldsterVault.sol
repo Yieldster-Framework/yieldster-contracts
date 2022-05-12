@@ -536,20 +536,12 @@ contract YieldsterVault is VaultStorage {
             );
             revertDelegate(success);
         } else if (id == 2 || id ==3) {
-            if(id==2){
                 require(
-                IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
-                    IAPContract(APContract).getDepositStrategy(),
-                "Not Deposit strategy"
+                (IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
+                    IAPContract(APContract).getDepositStrategy())||(IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
+                    IAPContract(APContract).getWithdrawStrategy()),
+                "Neither Deposit nor Withdraw strategy"
             );
-            }
-            if(id==3){
-                 require(
-                IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
-                    IAPContract(APContract).getWithdrawStrategy(),
-                "Not Withdraw strategy"
-            );
-            }
             (bool success, ) = IAPContract(APContract)
                 .getStrategyFromMinter(msg.sender)
                 .delegatecall(data);

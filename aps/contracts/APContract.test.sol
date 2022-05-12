@@ -305,10 +305,10 @@ contract APContractTest{
         return managementFeeStrategies[msg.sender].activeManagementFeeList;
     }
 
-    /// @dev Function to set the management fee strategies applied to a vault.
+    /// @dev Function to add the management fee strategies applied to a vault.
     /// @param _vaultAddress Address of the vault.
     /// @param _managementFeeAddress Address of the management fee strategy.
-    function setManagementFeeStrategies(
+    function addManagementFeeStrategies(
         address _vaultAddress,
         address _managementFeeAddress
     ) public {
@@ -391,7 +391,7 @@ contract APContractTest{
 
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function createVault(address _vaultAddress)
+    function setVaultStatus(address _vaultAddress)
     public
     {
         require(msg.sender == proxyFactory, "Only Proxy Factory can perform this operation");

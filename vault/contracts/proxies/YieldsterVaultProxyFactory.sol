@@ -42,7 +42,7 @@ contract YieldsterVaultProxyFactory {
                 }
             }
         
-        IAPContract(APContract).createVault(address(proxy));
+        IAPContract(APContract).setVaultStatus(address(proxy));
         emit ProxyCreation(proxy);
     }
 

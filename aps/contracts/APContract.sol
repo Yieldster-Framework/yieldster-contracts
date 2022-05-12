@@ -315,7 +315,7 @@ contract APContract is  Initializable{
         return managementFeeStrategies[msg.sender].activeManagementFeeList;
     }
 
-    /// @dev Function to set the management fee strategies applied to a vault.
+    /// @dev Function to add the management fee strategies applied to a vault.
     /// @param _vaultAddress Address of the vault.
     /// @param _managementFeeAddress Address of the management fee strategy.
     function addManagementFeeStrategies(

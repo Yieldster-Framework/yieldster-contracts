@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity 0.8.13;
+import "../interfaces/IAPContract.sol";
 
 contract Whitelist {
     uint256 groupId; // Id of the latest whitelist group created.
     address public whiteListManager; // Address of the WhiteList Manager.
+    address public apContract;
+    address public yieldsterDAO;
+
     struct WhitelistGroup {
         mapping(address => bool) members;
         mapping(address => bool) whitelistGroupAdmin;
@@ -12,22 +16,18 @@ contract Whitelist {
     mapping(uint256 => WhitelistGroup) private whitelistGroups; // Mapping of groupId to Whitelist group.
     event GroupCreated(address, uint256);
 
-    constructor() public {
-        whiteListManager = msg.sender;
+    constructor(address _apContract) public {
+        apContract = _apContract;
     }
 
-    modifier onlyWhitelistManager() {
+    /// @dev Function to change the aps contract of Yieldster.
+    /// @param _apContract Address of the aps.
+    function changeAPContract(address _apContract) public {
         require(
-            msg.sender == whiteListManager,
-            "Only Whitelist manager can call this function."
+            msg.sender == IAPContract(apContract).yieldsterGOD(),
+            "unauthorized"
         );
-        _;
-    }
-
-    /// @dev Function to change the whitelist manager of Yieldster.
-    /// @param _manager Address of the new manager.
-    function changeManager(address _manager) public onlyWhitelistManager {
-        whiteListManager = _manager;
+        apContract = _apContract;
     }
 
     /// @dev Function that returns if a whitelist group is exist.
@@ -48,14 +48,16 @@ contract Whitelist {
         public
         returns (uint256)
     {
+        require(IAPContract(apContract).vaultsCount(msg.sender)>0,"Not a vault admin");
         groupId += 1;
         require(!whitelistGroups[groupId].created, "Group already exists");
-        WhitelistGroup memory newGroup = WhitelistGroup({created: true});
-        whitelistGroups[groupId] = newGroup;
+        WhitelistGroup storage newGroup = whitelistGroups[groupId];
         whitelistGroups[groupId].members[_whitelistGroupAdmin] = true;
         whitelistGroups[groupId].whitelistGroupAdmin[
             _whitelistGroupAdmin
         ] = true;
+        newGroup.created = true;
+
         whitelistGroups[groupId].members[msg.sender] = true;
         emit GroupCreated(msg.sender, groupId);
         return groupId;

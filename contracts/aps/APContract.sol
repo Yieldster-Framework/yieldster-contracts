@@ -59,7 +59,9 @@ contract APContract is Initializable {
 
     mapping(address => bool) vaultCreated;
 
-    mapping(address => bool) vaultAdmins;
+    mapping(address => bool) APSManagers;
+
+    mapping(address => uint256) vaultsOwnedByAdmin;
 
     struct SmartStrategy {
         address minter;
@@ -84,19 +86,19 @@ contract APContract is Initializable {
     /// @param _yieldsterTreasury Address of yieldsterTreasury.
     /// @param _yieldsterGOD Address of yieldsterGOD.
     /// @param _emergencyVault Address of emergencyVault.
-    /// @param _vaultAdmin Address of vaultAdmin.
+    /// @param _apsAdmin Address of apsAdmin.
     function initialize(
         address _yieldsterDAO,
         address _yieldsterTreasury,
         address _yieldsterGOD,
         address _emergencyVault,
-        address _vaultAdmin
+        address _apsAdmin
     ) public initializer {
         yieldsterDAO = _yieldsterDAO;
         yieldsterTreasury = _yieldsterTreasury;
         yieldsterGOD = _yieldsterGOD;
         emergencyVault = _emergencyVault;
-        vaultAdmins[_vaultAdmin] = true;
+        APSManagers[_apsAdmin] = true;
     }
 
     /// @dev Function to set initial values.
@@ -137,13 +139,13 @@ contract APContract is Initializable {
     /// @dev Function to add vault Admin to Yieldster.
     /// @param _manager Address of the manager.
     function addManager(address _manager) public onlyYieldsterDAO {
-        vaultAdmins[_manager] = true;
+        APSManagers[_manager] = true;
     }
 
     /// @dev Function to remove vault Admin from Yieldster.
     /// @param _manager Address of the manager.
     function removeManager(address _manager) public onlyYieldsterDAO {
-        vaultAdmins[_manager] = false;
+        APSManagers[_manager] = false;
     }
 
     /// @dev Function to set Yieldster GOD.
@@ -243,6 +245,8 @@ contract APContract is Initializable {
     /// @param _vaultAdmin Address of the new APS Manager.
     function changeVaultAdmin(address _vaultAdmin) external {
         require(vaults[msg.sender].created, "Vault is not present");
+        vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] = vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] -1;
+        vaultsOwnedByAdmin[_vaultAdmin] = vaultsOwnedByAdmin[_vaultAdmin] +1;
         vaults[msg.sender].vaultAdmin = _vaultAdmin;
     }
 
@@ -394,6 +398,7 @@ contract APContract is Initializable {
         newVault.whitelistGroup = _whitelistGroup;
         newVault.created = true;
         newVault.slippage = 50;
+        vaultsOwnedByAdmin[_vaultAdmin] = vaultsOwnedByAdmin[_vaultAdmin] + 1;
 
         // applying Platform management fee
         managementFeeStrategies[msg.sender].isActiveManagementFee[
@@ -647,7 +652,7 @@ contract APContract is Initializable {
 
     modifier onlyManager() {
         require(
-            vaultAdmins[msg.sender],
+            APSManagers[msg.sender],
             "Only APS managers allowed to perform this operation!"
         );
         _;
@@ -700,4 +705,11 @@ contract APContract is Initializable {
             ((expectedToToken * slippagePercent) / (10000));
         return minReturn;
     }
+
+    /// @dev Function to check number of vaults owned by an admin
+    /// @param _vaultAdmin address of vaultAdmin
+    function vaultsCount(address _vaultAdmin)  public view returns (uint256) {
+        return vaultsOwnedByAdmin[_vaultAdmin];
+    }
+
 }

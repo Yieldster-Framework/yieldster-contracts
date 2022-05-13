@@ -30,5 +30,6 @@ interface IAPContract {
     function getStrategyFromMinter(address) external view returns (address);
     function sdkContract() external returns (address);
     function getWETH()external view returns(address);
-    function calculateSlippage(address ,address, uint256, uint256)external view returns(uint256)
+    function calculateSlippage(address ,address, uint256, uint256)external view returns(uint256);
+    function vaultsCount(address) external view returns(uint256);
 }

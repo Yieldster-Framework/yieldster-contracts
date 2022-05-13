@@ -44,34 +44,6 @@ contract Exchange is VaultStorage {
         return 0;
     }
 
-
-    /// @dev Function to calculate the slippage accounted min return for an exchange operation.
-    /// @param fromToken Address of the from token.
-    /// @param toToken Address of the to token.
-    /// @param amount Amount of the from token.
-    function calculateSlippage(
-        address fromToken,
-        address toToken,
-        uint256 amount
-    ) internal view returns (uint256) {
-        uint256 slippage = IAPContract(APContract).getVaultSlippage();
-        uint256 fromTokenUSD = IAPContract(APContract).getUSDPrice(fromToken);
-        uint256 toTokenUSD = IAPContract(APContract).getUSDPrice(toToken);
-        uint256 fromTokenAmountDecimals = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).toDecimals(fromToken, amount);
-
-        uint256 expectedToTokenDecimal = (
-            fromTokenAmountDecimals.mul(fromTokenUSD)
-        ).div(toTokenUSD);
-        uint256 expectedToToken = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).fromDecimals(toToken, expectedToTokenDecimal);
-        uint256 minReturn = expectedToToken - //SLIPPAGE
-            expectedToToken.mul(slippage).div(10000);
-        return minReturn;
-    }
-
     /// @dev Function to exchange tokens to for a target token.
     /// @param fromToken Address of the from token.
     /// @param toToken Address of the to token.
@@ -85,7 +57,8 @@ contract Exchange is VaultStorage {
             IAPContract(APContract).exchangeRegistry()
         ).getPair(fromToken, toToken);
         _approveToken(fromToken, exchange, amount);
-        uint256 minReturn = calculateSlippage(fromToken, toToken, amount);
+        uint256 slippage = IAPContract(APContract).getVaultSlippage();
+        uint256 minReturn = IAPContract(APContract).calculateSlippage(fromToken, toToken, amount,slippage);
 
         uint256 returnedTokenCount = IExchange(exchange).swap(
             fromToken,

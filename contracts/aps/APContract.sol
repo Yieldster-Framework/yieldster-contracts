@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.1;
+pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./interfaces/IPriceModule.sol";
+import "../interfaces/IPriceModule.sol";
+import "../interfaces/IHexUtils.sol";
 
-contract APContract is  Initializable{
-
+contract APContract is Initializable {
     address public yieldsterDAO;
 
     address public yieldsterTreasury;
@@ -23,7 +23,7 @@ contract APContract is  Initializable{
 
     address public priceModule;
 
-     address public safeMinter;
+    address public safeMinter;
 
     address public safeUtils;
 
@@ -58,7 +58,7 @@ contract APContract is  Initializable{
     mapping(address => Vault) vaults;
 
     mapping(address => bool) vaultCreated;
-    
+
     mapping(address => bool) vaultAdmins;
 
     struct SmartStrategy {
@@ -86,16 +86,13 @@ contract APContract is  Initializable{
     /// @param _emergencyVault Address of emergencyVault.
     /// @param _vaultAdmin Address of vaultAdmin.
     function initialize(
-        address _yieldsterDAO, 
+        address _yieldsterDAO,
         address _yieldsterTreasury,
         address _yieldsterGOD,
         address _emergencyVault,
         address _vaultAdmin
-        ) 
-        public 
-        initializer 
-    {
-       yieldsterDAO = _yieldsterDAO;
+    ) public initializer {
+        yieldsterDAO = _yieldsterDAO;
         yieldsterTreasury = _yieldsterTreasury;
         yieldsterGOD = _yieldsterGOD;
         emergencyVault = _emergencyVault;
@@ -120,9 +117,7 @@ contract APContract is  Initializable{
         address _exchangeRegistry,
         address _priceModule,
         address _safeUtils
-        ) 
-        public onlyYieldsterDAO
-    {
+    ) public onlyYieldsterDAO {
         whitelistModule = _whitelistModule;
         platFormManagementFee = _platformManagementFee;
         stringUtils = _stringUtils;
@@ -135,91 +130,79 @@ contract APContract is  Initializable{
 
     /// @dev Function to add proxy Factory address to Yieldster.
     /// @param _proxyFactory Address of proxy factory.
-    function addProxyFactory(address _proxyFactory)
-        public
-        onlyManager
-    {
+    function addProxyFactory(address _proxyFactory) public onlyManager {
         proxyFactory = _proxyFactory;
     }
 
     /// @dev Function to add vault Admin to Yieldster.
     /// @param _manager Address of the manager.
-    function addManager(address _manager) 
-        public
-        onlyYieldsterDAO
-    {
+    function addManager(address _manager) public onlyYieldsterDAO {
         vaultAdmins[_manager] = true;
     }
 
     /// @dev Function to remove vault Admin from Yieldster.
     /// @param _manager Address of the manager.
-    function removeManager(address _manager)
-        public
-        onlyYieldsterDAO
-    {
+    function removeManager(address _manager) public onlyYieldsterDAO {
         vaultAdmins[_manager] = false;
-    } 
+    }
 
     /// @dev Function to set Yieldster GOD.
     /// @param _yieldsterGOD Address of the Yieldster GOD.
-    function setYieldsterGOD(address _yieldsterGOD)
-        public
-    {
-        require(msg.sender == yieldsterGOD, "Only Yieldster GOD can perform this operation");
+    function setYieldsterGOD(address _yieldsterGOD) public {
+        require(
+            msg.sender == yieldsterGOD,
+            "Only Yieldster GOD can perform this operation"
+        );
         yieldsterGOD = _yieldsterGOD;
     }
 
     /// @dev Function to set Yieldster DAO.
     /// @param _yieldsterDAO Address of the Yieldster DAO.
-    function setYieldsterDAO(address _yieldsterDAO)
-        public
-    {
-        require(msg.sender == yieldsterDAO, "Only Yieldster DAO can perform this operation");
+    function setYieldsterDAO(address _yieldsterDAO) public {
+        require(
+            msg.sender == yieldsterDAO,
+            "Only Yieldster DAO can perform this operation"
+        );
         yieldsterDAO = _yieldsterDAO;
     }
 
     /// @dev Function to set Yieldster Treasury.
     /// @param _yieldsterTreasury Address of the Yieldster Treasury.
-    function setYieldsterTreasury(address _yieldsterTreasury)
-        public
-    {
-        require(msg.sender == yieldsterDAO, "Only Yieldster DAO can perform this operation");
+    function setYieldsterTreasury(address _yieldsterTreasury) public {
+        require(
+            msg.sender == yieldsterDAO,
+            "Only Yieldster DAO can perform this operation"
+        );
         yieldsterTreasury = _yieldsterTreasury;
     }
 
     /// @dev Function to disable Yieldster GOD.
-    function disableYieldsterGOD()
-        public
-    {
-        require(msg.sender == yieldsterGOD, "Only Yieldster GOD can perform this operation");
+    function disableYieldsterGOD() public {
+        require(
+            msg.sender == yieldsterGOD,
+            "Only Yieldster GOD can perform this operation"
+        );
         yieldsterGOD = address(0);
     }
 
     /// @dev Function to set Emergency vault.
     /// @param _emergencyVault Address of the Yieldster Emergency vault.
     function setEmergencyVault(address _emergencyVault)
-        onlyYieldsterDAO
         public
+        onlyYieldsterDAO
     {
         emergencyVault = _emergencyVault;
     }
 
-
     /// @dev Function to set Safe Minter.
     /// @param _safeMinter Address of the Safe Minter.
-    function setSafeMinter(address _safeMinter)
-        onlyYieldsterDAO
-        public
-    {
+    function setSafeMinter(address _safeMinter) public onlyYieldsterDAO {
         safeMinter = _safeMinter;
     }
 
     /// @dev Function to set safeUtils contract.
     /// @param _safeUtils Address of the safeUtils contract.
-    function setSafeUtils(address _safeUtils)
-        onlyYieldsterDAO
-        public
-    {
+    function setSafeUtils(address _safeUtils) public onlyYieldsterDAO {
         safeUtils = _safeUtils;
     }
 
@@ -231,7 +214,10 @@ contract APContract is  Initializable{
 
     /// @dev Function to set whitelistModule contract.
     /// @param _whitelistModule Address of the whitelistModule contract.
-    function setWhitelistModule(address _whitelistModule) public onlyYieldsterDAO {
+    function setWhitelistModule(address _whitelistModule)
+        public
+        onlyYieldsterDAO
+    {
         whitelistModule = _whitelistModule;
     }
 
@@ -244,26 +230,23 @@ contract APContract is  Initializable{
         exchangeRegistry = _exchangeRegistry;
     }
 
-
     /// @dev Function to set Yieldster Exchange.
     /// @param _yieldsterExchange Address of the Yieldster exchange.
     function setYieldsterExchange(address _yieldsterExchange)
-        onlyYieldsterDAO
         public
+        onlyYieldsterDAO
     {
         yieldsterExchange = _yieldsterExchange;
     }
 
     /// @dev Function to change the vault Admin for a vault.
     /// @param _vaultAdmin Address of the new APS Manager.
-    function changeVaultAdmin(address _vaultAdmin)
-        external
-    {
+    function changeVaultAdmin(address _vaultAdmin) external {
         require(vaults[msg.sender].created, "Vault is not present");
         vaults[msg.sender].vaultAdmin = _vaultAdmin;
     }
 
-     /// @dev Function to change the Slippage Settings for a vault.
+    /// @dev Function to change the Slippage Settings for a vault.
     /// @param _slippage value of slippage.
     function setVaultSlippage(uint256 _slippage) external {
         require(vaults[msg.sender].created, "Vault is not present");
@@ -279,20 +262,13 @@ contract APContract is  Initializable{
     //Price Module
     /// @dev Function to set Yieldster price module.
     /// @param _priceModule Address of the price module.
-    function setPriceModule(address _priceModule)
-        public
-        onlyManager
-    {
+    function setPriceModule(address _priceModule) public onlyManager {
         priceModule = _priceModule;
     }
 
     /// @dev Function to get the USD price for a token.
     /// @param _tokenAddress Address of the token.
-    function getUSDPrice(address _tokenAddress) 
-        public 
-        view
-        returns(uint256)
-    {
+    function getUSDPrice(address _tokenAddress) public view returns (uint256) {
         return IPriceModule(priceModule).getUSDPrice(_tokenAddress);
     }
 
@@ -331,10 +307,10 @@ contract APContract is  Initializable{
             _managementFeeAddress
         ] = true;
         managementFeeStrategies[_vaultAddress].activeManagementFeeIndex[
-            _managementFeeAddress
-        ] = managementFeeStrategies[_vaultAddress]
-        .activeManagementFeeList
-        .length;
+                _managementFeeAddress
+            ] = managementFeeStrategies[_vaultAddress]
+            .activeManagementFeeList
+            .length;
         managementFeeStrategies[_vaultAddress].activeManagementFeeList.push(
             _managementFeeAddress
         );
@@ -370,54 +346,46 @@ contract APContract is  Initializable{
 
         if (
             managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeList
-            .length == 1
-        ) {
-            managementFeeStrategies[_vaultAddress]
                 .activeManagementFeeList
-                .pop();
+                .length == 1
+        ) {
+            managementFeeStrategies[_vaultAddress].activeManagementFeeList.pop();
         } else {
             uint256 index = managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeIndex[_managementFeeAddress];
+                .activeManagementFeeIndex[_managementFeeAddress];
             uint256 lastIndex = managementFeeStrategies[_vaultAddress]
-            .activeManagementFeeList
-            .length - 1;
+                .activeManagementFeeList
+                .length - 1;
             delete managementFeeStrategies[_vaultAddress]
                 .activeManagementFeeList[index];
             managementFeeStrategies[_vaultAddress].activeManagementFeeIndex[
-                managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                    lastIndex
-                ]
-            ] = index;
+                    managementFeeStrategies[_vaultAddress]
+                        .activeManagementFeeList[lastIndex]
+                ] = index;
             managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                index
-            ] = managementFeeStrategies[_vaultAddress].activeManagementFeeList[
-                lastIndex
-            ];
-            managementFeeStrategies[_vaultAddress]
-                .activeManagementFeeList
-                .pop();
+                    index
+                ] = managementFeeStrategies[_vaultAddress]
+                .activeManagementFeeList[lastIndex];
+            managementFeeStrategies[_vaultAddress].activeManagementFeeList.pop();
         }
     }
 
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function createVault(address _vaultAddress)
-    public
-    {
-        require(msg.sender == proxyFactory, "Only Proxy Factory can perform this operation");
+    function createVault(address _vaultAddress) public {
+        require(
+            msg.sender == proxyFactory,
+            "Only Proxy Factory can perform this operation"
+        );
         vaultCreated[_vaultAddress] = true;
     }
 
     /// @dev Function to add a vault in the APS.
     /// @param _vaultAdmin Address of the vaults APS Manager.
     /// @param _whitelistGroup List of whitelist groups applied to the vault.
-    function addVault(
-        address _vaultAdmin,
-        uint256[] memory _whitelistGroup
-    )
-    public
-    {   
+    function addVault(address _vaultAdmin, uint256[] memory _whitelistGroup)
+        public
+    {
         require(vaultCreated[msg.sender], "Vault not created");
         Vault storage newVault = vaults[msg.sender];
         newVault.vaultAdmin = _vaultAdmin;
@@ -426,17 +394,32 @@ contract APContract is  Initializable{
         newVault.whitelistGroup = _whitelistGroup;
         newVault.created = true;
         newVault.slippage = 50;
-       
 
         // applying Platform management fee
-        managementFeeStrategies[msg.sender].isActiveManagementFee[platFormManagementFee] = true;
-        managementFeeStrategies[msg.sender].activeManagementFeeIndex[platFormManagementFee] = managementFeeStrategies[msg.sender].activeManagementFeeList.length;
-        managementFeeStrategies[msg.sender].activeManagementFeeList.push(platFormManagementFee);
+        managementFeeStrategies[msg.sender].isActiveManagementFee[
+            platFormManagementFee
+        ] = true;
+        managementFeeStrategies[msg.sender].activeManagementFeeIndex[
+                platFormManagementFee
+            ] = managementFeeStrategies[msg.sender]
+            .activeManagementFeeList
+            .length;
+        managementFeeStrategies[msg.sender].activeManagementFeeList.push(
+            platFormManagementFee
+        );
 
         //applying Profit management fee
-        managementFeeStrategies[msg.sender].isActiveManagementFee[profitManagementFee] = true;
-        managementFeeStrategies[msg.sender].activeManagementFeeIndex[profitManagementFee] = managementFeeStrategies[msg.sender].activeManagementFeeList.length;
-        managementFeeStrategies[msg.sender].activeManagementFeeList.push(profitManagementFee);
+        managementFeeStrategies[msg.sender].isActiveManagementFee[
+            profitManagementFee
+        ] = true;
+        managementFeeStrategies[msg.sender].activeManagementFeeIndex[
+                profitManagementFee
+            ] = managementFeeStrategies[msg.sender]
+            .activeManagementFeeList
+            .length;
+        managementFeeStrategies[msg.sender].activeManagementFeeList.push(
+            profitManagementFee
+        );
     }
 
     /// @dev Function to Manage the vault assets.
@@ -449,9 +432,7 @@ contract APContract is  Initializable{
         address[] memory _enabledWithdrawalAsset,
         address[] memory _disabledDepositAsset,
         address[] memory _disabledWithdrawalAsset
-    )
-    public
-    {
+    ) public {
         require(vaults[msg.sender].created, "Vault not present");
 
         for (uint256 i = 0; i < _enabledDepositAsset.length; i++) {
@@ -485,55 +466,34 @@ contract APContract is  Initializable{
 
     /// @dev Function to check if the asset is supported by the vault.
     /// @param cleanUpAsset Address of the asset.
-    function _isVaultAsset(address cleanUpAsset)
-        public
-        view
-        returns(bool)
-    {
+    function _isVaultAsset(address cleanUpAsset) public view returns (bool) {
         require(vaults[msg.sender].created, "Vault is not present");
         return vaults[msg.sender].vaultAssets[cleanUpAsset];
-
     }
 
     /// @dev Function to check if an asset is supported by Yieldster.
     /// @param _address Address of the asset.
-    function _isAssetPresent(address _address) 
-        private 
-        view 
-        returns(bool)
-    {
+    function _isAssetPresent(address _address) private view returns (bool) {
         return assets[_address];
     }
-    
+
     /// @dev Function to add an asset to the Yieldster.
     /// @param _tokenAddress Address of the asset.
-    function addAsset(
-        address _tokenAddress
-        ) 
-        public 
-        onlyManager
-    {
-        require(!_isAssetPresent(_tokenAddress),"Asset already present!");
+    function addAsset(address _tokenAddress) public onlyManager {
+        require(!_isAssetPresent(_tokenAddress), "Asset already present!");
         assets[_tokenAddress] = true;
     }
 
     /// @dev Function to remove an asset from the Yieldster.
     /// @param _tokenAddress Address of the asset.
-    function removeAsset(address _tokenAddress) 
-        public 
-        onlyManager
-    {
-        require(_isAssetPresent(_tokenAddress),"Asset not present!");
+    function removeAsset(address _tokenAddress) public onlyManager {
+        require(_isAssetPresent(_tokenAddress), "Asset not present!");
         delete assets[_tokenAddress];
     }
-    
+
     /// @dev Function to check if an asset is supported deposit asset in the vault.
     /// @param _assetAddress Address of the asset.
-    function isDepositAsset(address _assetAddress)
-        public
-        view
-        returns(bool)
-    {
+    function isDepositAsset(address _assetAddress) public view returns (bool) {
         require(vaults[msg.sender].created, "Vault not present");
         return vaults[msg.sender].vaultDepositAssets[_assetAddress];
     }
@@ -543,7 +503,7 @@ contract APContract is  Initializable{
     function isWithdrawalAsset(address _assetAddress)
         public
         view
-        returns(bool)
+        returns (bool)
     {
         require(vaults[msg.sender].created, "Vault not present");
         return vaults[msg.sender].vaultWithdrawalAssets[_assetAddress];
@@ -580,7 +540,7 @@ contract APContract is  Initializable{
         }
     }
 
-     /// @dev Function to check if a smart strategy is supported by Yieldster.
+    /// @dev Function to check if a smart strategy is supported by Yieldster.
     /// @param _address Address of the smart strategy.
     function _isSmartStrategyPresent(address _address)
         private
@@ -608,11 +568,13 @@ contract APContract is  Initializable{
         //     executor: _executor,
         //     created: true
         // });
-        SmartStrategy storage newSmartStrategy = smartStrategies[_smartStrategyAddress];
-        newSmartStrategy.minter =_minter;
+        SmartStrategy storage newSmartStrategy = smartStrategies[
+            _smartStrategyAddress
+        ];
+        newSmartStrategy.minter = _minter;
         newSmartStrategy.executor = _executor;
         newSmartStrategy.created = true;
-        
+
         minterStrategyMap[_minter] = _smartStrategyAddress;
     }
 
@@ -675,30 +637,67 @@ contract APContract is  Initializable{
         return minterStrategyMap[_minter];
     }
 
-
-     modifier onlyYieldsterDAO{
-        require(yieldsterDAO == msg.sender, "Only Yieldster DAO is allowed to perform this operation");
+    modifier onlyYieldsterDAO() {
+        require(
+            yieldsterDAO == msg.sender,
+            "Only Yieldster DAO is allowed to perform this operation"
+        );
         _;
     }
 
-    modifier onlyManager{
-        require(vaultAdmins[msg.sender], "Only APS managers allowed to perform this operation!");
+    modifier onlyManager() {
+        require(
+            vaultAdmins[msg.sender],
+            "Only APS managers allowed to perform this operation!"
+        );
         _;
     }
 
     /// @dev Function to check if an address is an Yieldster Vault.
     /// @param _address Address to check.
-    function isVault( address _address) public view returns(bool){
-       return vaults[_address].created;
+    function isVault(address _address) public view returns (bool) {
+        return vaults[_address].created;
     }
 
     /// @dev Function to get wEth Address.
     function getWETH() external view returns (address) {
         return wEth;
     }
-     /// @dev Function to set wEth Address.
-    /// @param _address Address of wEth.
-    function setWETH(address _wEth) external onlyYieldsterDAO returns (address) {
+
+    /// @dev Function to set wEth Address.
+    /// @param _wEth Address of wEth.
+    function setWETH(address _wEth) external onlyYieldsterDAO {
         wEth = _wEth;
+    }
+
+    /// @dev function to calculate the slippage value accounted min return for an exchange operation.
+    /// @param fromToken Address of From token
+    /// @param toToken Address of To token
+    /// @param amount amount of From token
+    /// @param slippagePercent slippage Percentage
+    function calculateSlippage(
+        address fromToken,
+        address toToken,
+        uint256 amount,
+        uint256 slippagePercent
+    ) public view returns (uint256) {
+        uint256 fromTokenUSD = getUSDPrice(fromToken);
+        uint256 toTokenUSD = getUSDPrice(toToken);
+        uint256 fromTokenAmountDecimals = IHexUtils(stringUtils).toDecimals(
+            fromToken,
+            amount
+        );
+
+        uint256 expectedToTokenDecimal = (fromTokenAmountDecimals *
+            fromTokenUSD) / toTokenUSD;
+
+        uint256 expectedToToken = IHexUtils(stringUtils).fromDecimals(
+            toToken,
+            expectedToTokenDecimal
+        );
+
+        uint256 minReturn = expectedToToken -
+            ((expectedToToken * slippagePercent) / (10000));
+        return minReturn;
     }
 }

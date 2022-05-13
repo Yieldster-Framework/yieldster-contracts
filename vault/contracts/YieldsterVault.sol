@@ -417,7 +417,7 @@ contract YieldsterVault is VaultStorage {
         address exchange = exchangeRegistry.getPair(_fromToken, _toToken);
         require(exchange != address(0), "Exchange pair not present");
         addToAssetList(_toToken);
-        uint256 minReturn = calculateSlippage(
+        uint256 minReturn = IAPContract(APContract).calculateSlippage(
             _fromToken,
             _toToken,
             _amount,
@@ -443,35 +443,6 @@ contract YieldsterVault is VaultStorage {
         return exchangeReturn;
     }
 
-    /// @dev function to calculate the slippage value accounted min return for an exchange operation.
-    /// @param fromToken Address of From token
-    /// @param toToken Address of To token
-    /// @param amount amount of From token
-    /// @param slippagePercent slippage Percentage
-    function calculateSlippage(
-        address fromToken,
-        address toToken,
-        uint256 amount,
-        uint256 slippagePercent
-    ) internal view returns (uint256) {
-        uint256 fromTokenUSD = IAPContract(APContract).getUSDPrice(fromToken);
-        uint256 toTokenUSD = IAPContract(APContract).getUSDPrice(toToken);
-        uint256 fromTokenAmountDecimals = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).toDecimals(fromToken, amount);
-
-        uint256 expectedToTokenDecimal = (
-            fromTokenAmountDecimals.mul(fromTokenUSD)
-        ).div(toTokenUSD);
-        uint256 expectedToToken = IHexUtils(
-            IAPContract(APContract).stringUtils()
-        ).fromDecimals(toToken, expectedToTokenDecimal);
-        uint256 minReturn = expectedToToken - //SLIPPAGE
-            expectedToToken.mul(slippagePercent).div(10000);
-        return minReturn;
-    }
-
-    
     /// @dev Function to perform Management fee Calculations in the Vault.
     /// @param _tokenAddress Address of token on which managementFeeCleanUp has to be performed
     function managementFeeCleanUp(address _tokenAddress) public returns(uint256){

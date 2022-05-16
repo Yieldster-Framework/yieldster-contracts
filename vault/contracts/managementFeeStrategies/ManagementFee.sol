@@ -82,14 +82,14 @@ contract ManagementFee is VaultStorage {
             address payable to = payable(
                 IAPContract(APContract).yieldsterDAO()
             );
-            to.transfer(_feeAmountToTransfer);
             updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
+            to.transfer(_feeAmountToTransfer);
         } else {
+            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
             IERC20(_tokenAddress).safeTransfer(
                 IAPContract(APContract).yieldsterDAO(),
                 _feeAmountToTransfer
             );
-            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         }
     }
 

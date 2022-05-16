@@ -1,6 +1,6 @@
 const utils = require("./utils/general");
 const ERC20 = artifacts.require("IERC20")
-const APContract = artifacts.require("./aps/APContractTest.sol");
+const APContract = artifacts.require("./aps/APContract.sol");
 const ProxyFactory = artifacts.require("./proxies/YieldsterVaultProxyFactory.sol");
 const YieldsterVault = artifacts.require("./YieldsterVault.sol");
 const Whitelist = artifacts.require("./whitelist/Whitelist.sol");

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.1;
+pragma solidity 0.8.13;
 
 import "../common/MasterCopy.sol";
 import "../token/ERC20Detailed.sol";

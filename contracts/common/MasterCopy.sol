@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.1;
+pragma solidity 0.8.13;
 
 
 /// @title MasterCopy - Base for master copy contracts (should always be first super contract)

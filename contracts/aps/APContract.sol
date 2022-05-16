@@ -295,10 +295,10 @@ contract APContract is Initializable {
         return managementFeeStrategies[msg.sender].activeManagementFeeList;
     }
 
-    /// @dev Function to set the management fee strategies applied to a vault.
+    /// @dev Function to add the management fee strategies applied to a vault.
     /// @param _vaultAddress Address of the vault.
     /// @param _managementFeeAddress Address of the management fee strategy.
-    function setManagementFeeStrategies(
+    function addManagementFeeStrategies(
         address _vaultAddress,
         address _managementFeeAddress
     ) public {
@@ -376,11 +376,10 @@ contract APContract is Initializable {
 
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function createVault(address _vaultAddress) public {
-        require(
-            msg.sender == proxyFactory,
-            "Only Proxy Factory can perform this operation"
-        );
+    function setVaultStatus(address _vaultAddress)
+    public
+    {
+        require(msg.sender == proxyFactory, "Only Proxy Factory can perform this operation");
         vaultCreated[_vaultAddress] = true;
     }
 
@@ -668,10 +667,9 @@ contract APContract is Initializable {
     function getWETH() external view returns (address) {
         return wEth;
     }
-
     /// @dev Function to set wEth Address.
     /// @param _wEth Address of wEth.
-    function setWETH(address _wEth) external onlyYieldsterDAO {
+    function setWETH(address _wEth) external onlyYieldsterDAO{
         wEth = _wEth;
     }
 

@@ -86,15 +86,15 @@ contract ProfitManagementFee is VaultStorage {
         internal
     {
         if (_tokenAddress == eth) {
+            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
             address payable to = payable(strategyBeneficiary);
             to.transfer(_feeAmountToTransfer);
-            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         } else {
+            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
             IERC20(_tokenAddress).safeTransfer(
                 strategyBeneficiary,
                 _feeAmountToTransfer
             );
-            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         }
     }
 
@@ -105,6 +105,7 @@ contract ProfitManagementFee is VaultStorage {
         view
         returns (uint256, uint256)
     {
+        address wEth = IAPContract(APContract).getWETH();
         address tokenAddress = _tokenAddress;
         if (_tokenAddress == eth) tokenAddress = wEth;
         uint256 currentVaultNAV = getVaultNAV();

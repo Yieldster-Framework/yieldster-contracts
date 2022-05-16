@@ -18,7 +18,7 @@ interface IAPContract {
     function getVaultSlippage() external view returns (uint256);
     function _isVaultAsset(address) external view returns (bool);
     function yieldsterTreasury() external view returns (address);
-    function createVault(address) external;
+    function setVaultStatus(address) external;
     function setVaultSmartStrategy(address, uint256) external;
     function getWithdrawStrategy() external returns (address);
     function getDepositStrategy() external returns (address);

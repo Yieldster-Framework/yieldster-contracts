@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract YieldsterVault is VaultStorage {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+    event Response(address feeAddress);
 
 
     /// @dev Function to upgrade the mastercopy of Yieldster Vault.
@@ -449,9 +450,13 @@ contract YieldsterVault is VaultStorage {
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
-            managementFeeStrategies[i].delegatecall(
+           (bool result,)= managementFeeStrategies[i].delegatecall(
                 abi.encodeWithSignature("executeSafeCleanUp(address)",_tokenAddress)
             );
+             if(result==false)
+            {
+                emit Response(managementFeeStrategies[i]);
+            }
         }
     }
 
@@ -486,8 +491,8 @@ contract YieldsterVault is VaultStorage {
        
     }
 
-    /// @dev Function to perform operation on Receivel of ERC1155 token from Yieldster Strategy Minter.
-    /// @param id Number denoting the type of instruction. 1 = safe Minter, 2 = strategy minter, 3 = deposit strategy minter, 4 = withdrawal strategy minter.
+    /// @dev Function to perform operation on Receival of ERC1155 token from Yieldster Strategy Minter.
+    /// @param id Number denoting the type of instruction. 0 = safe Minter,2 = deposit strategy minter, 3 = withdrawal strategy minter.
     /// @param data Bytes containing encoded function call.
     function onERC1155Received(
         address,
@@ -506,27 +511,19 @@ contract YieldsterVault is VaultStorage {
                 data
             );
             revertDelegate(success);
-        } else if (id == 2) {
-            require(
-                IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
-                    IAPContract(APContract).getDepositStrategy(),
-                "Not Deposit strategy"
-            );
-            (bool success, ) = IAPContract(APContract)
-                .getStrategyFromMinter(msg.sender)
-                .delegatecall(data);
-            revertDelegate(success);
-        } else if (id == 3) {
-            require(
-                IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
-                    IAPContract(APContract).getWithdrawStrategy(),
-                "Not Withdraw strategy"
+        } else if (id == 2 || id ==3) {
+                require(
+                (IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
+                    IAPContract(APContract).getDepositStrategy())||(IAPContract(APContract).getStrategyFromMinter(msg.sender) ==
+                    IAPContract(APContract).getWithdrawStrategy()),
+                "Neither Deposit nor Withdraw strategy"
             );
             (bool success, ) = IAPContract(APContract)
                 .getStrategyFromMinter(msg.sender)
                 .delegatecall(data);
             revertDelegate(success);
         }
+        
         return
             bytes4(
                 keccak256(

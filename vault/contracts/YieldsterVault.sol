@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract YieldsterVault is VaultStorage {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+    event Response(address feeAddress);
 
 
     /// @dev Function to upgrade the mastercopy of Yieldster Vault.
@@ -478,9 +479,13 @@ contract YieldsterVault is VaultStorage {
         address[] memory managementFeeStrategies = IAPContract(APContract)
         .getVaultManagementFee();
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
-            managementFeeStrategies[i].delegatecall(
+           (bool result,)= managementFeeStrategies[i].delegatecall(
                 abi.encodeWithSignature("executeSafeCleanUp(address)",_tokenAddress)
             );
+             if(result==false)
+            {
+                emit Response(managementFeeStrategies[i]);
+            }
         }
     }
 

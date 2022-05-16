@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract SafeUtils is VaultStorage {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    event safeUtilsResponse(address feeAddress);
+
 
     /// @dev Function to cleanup vault unsupported tokens to the Yieldster Treasury.
     /// @param cleanUpList List of unsupported tokens to be transfered.
@@ -116,22 +118,20 @@ contract SafeUtils is VaultStorage {
     }
 
     /// @dev Function to perform Management fee Calculations in the Vault.
-    /// @param _tokenAddress Address of the token in which fee has to be given.
-    /// @param _type Type OF CleanUp.
-    function managementFeeCleanUp(address _tokenAddress, uint256 _type) public {
+    /// @param _tokenAddress Address of the token in which fee has to be given.    
+ function managementFeeCleanUp(address _tokenAddress) public {
         address[] memory managementFeeStrategies = IAPContract(APContract)
             .getVaultManagementFee();
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
-            managementFeeStrategies[i].delegatecall(
-                abi.encodeWithSignature(
-                    "executeSafeCleanUp(address,uint256)",
-                    _tokenAddress,
-                    _type
-                )
+            (bool result,) =managementFeeStrategies[i].delegatecall(
+                abi.encodeWithSignature("executeSafeCleanUp(address)",_tokenAddress)
             );
+         if(result==false)
+         {
+             emit safeUtilsResponse(managementFeeStrategies[i]);
+         }
         }
     }
-
     /// @dev Function to update token balance in case of any inconsistancy.
     /// @param _assetList Address list of Assets.
     /// @param _amount Amount list of Assets.

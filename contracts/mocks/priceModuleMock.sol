@@ -69,6 +69,10 @@ contract MockPriceModule {
             return uint256(1100000000000000000); //1.1
         } else if (tokens[_tokenAddress].tokenType == 3) {
             return uint256(2000000000000000000); //2.0
-        } else revert("Token not present");
+        }
+        else if (tokens[_tokenAddress].tokenType == 4) {
+            return uint256(4000000000000000000); //2.0
+        }
+         else revert("Token not present");
     }
 }

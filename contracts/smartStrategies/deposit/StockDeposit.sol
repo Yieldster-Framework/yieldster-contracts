@@ -16,6 +16,7 @@ contract StockDeposit is VaultStorage {
         address tokenAddress;
         IERC20 token;
         address wEth = IAPContract(APContract).getWETH();
+        addToAssetList(_tokenAddress);
         if (_tokenAddress == eth) tokenAddress = wEth;
         else {
             tokenAddress = _tokenAddress;
@@ -34,7 +35,6 @@ contract StockDeposit is VaultStorage {
             tokenBalances.getTokenBalance(_tokenAddress).add(_amount)
         );
         _mint(msg.sender, _share);
-        addToAssetList(_tokenAddress);
         if (_tokenAddress != eth)
             token.safeTransferFrom(msg.sender, address(this), _amount);
     }

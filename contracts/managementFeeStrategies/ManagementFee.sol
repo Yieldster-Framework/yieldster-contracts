@@ -103,7 +103,7 @@ contract ManagementFee is VaultStorage {
     {
         uint256 vaultNAV = getVaultNAV();
         ManagementFeeStorage mStorage = ManagementFeeStorage(
-            0x19c4b4c2d5CAce9b3e3a3A37576F46e5Ad08E421
+            IAPContract(APContract).getPlatformFeeStorage()
         );
         address tokenAddress = _tokenAddress;
         if (_tokenAddress == eth) {

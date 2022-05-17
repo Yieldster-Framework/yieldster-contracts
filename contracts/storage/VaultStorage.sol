@@ -16,12 +16,11 @@ import "../interfaces/IExchangeRegistry.sol";
 import "../interfaces/IExchange.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-
-contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
-
+contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    uint256 constant arrSize = 1000;
     uint8 public emergencyConditions;
     bool internal vaultSetupCompleted;
     bool internal vaultRegistrationCompleted;
@@ -29,76 +28,74 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
     address public owner;
     address public vaultAdmin;
     uint256[] internal whiteListGroups;
-    mapping(uint256=>bool)isWhiteListGroupPresent;
+    mapping(uint256 => bool) isWhiteListGroupPresent;
     address[] internal assetList;
-    mapping(address=>bool) internal isAssetPresent;
+    mapping(address => bool) internal isAssetPresent;
     address public strategyBeneficiary;
     uint256 public strategyPercentage;
     uint256 public threshold;
-    address public  eth;
+    address public eth;
 
     TokenBalanceStorage tokenBalances;
 
-    
-    
     //TODO verify if this code has to be used for this fn
     /// @dev Function to revert in case of low level call fail.
     /// @param _delegateStatus Boolean indicating the status of low level call.
-    function revertDelegate(bool _delegateStatus) internal pure{
-        if(!_delegateStatus){
-            assembly{
+    function revertDelegate(bool _delegateStatus) internal pure {
+        if (!_delegateStatus) {
+            assembly {
                 let ptr := mload(0x40)
                 let size := returndatasize()
-                returndatacopy(ptr,0,size)
-                revert(ptr,size)
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
             }
         }
     }
 
     /// @dev Function to get the balance of token from tokenBalances.
     /// @param _tokenAddress Address of the token.
-    function getTokenBalance(address _tokenAddress) external view returns (uint256)
+    function getTokenBalance(address _tokenAddress)
+        external
+        view
+        returns (uint256)
     {
         return tokenBalances.getTokenBalance(_tokenAddress);
     }
 
     /// @dev Function to add a token to assetList.
     /// @param _asset Address of the asset.
-    function addToAssetList(address _asset) internal{
-        require(_asset!=address(0),"invalid asset address");
-        if(!isAssetPresent[_asset]){
+    function addToAssetList(address _asset) internal {
+        require(_asset != address(0), "invalid asset address");
+        if (!isAssetPresent[_asset]) {
+            checkLength(1);
             assetList.push(_asset);
             isAssetPresent[_asset] = true;
         }
     }
 
-   
-
-     /// @dev Function to return the NAV of the Vault.
+    /// @dev Function to return the NAV of the Vault.
     function getVaultNAV() public view returns (uint256) {
         uint256 nav = 0;
         address wEth = IAPContract(APContract).getWETH();
         for (uint256 i = 0; i < assetList.length; i++) {
-
-
             if (tokenBalances.getTokenBalance(assetList[i]) > 0) {
                 uint256 tokenUSD = IAPContract(APContract).getUSDPrice(
                     assetList[i]
                 );
-                if( assetList[i]==eth){
+                if (assetList[i] == eth) {
                     nav += IHexUtils(IAPContract(APContract).stringUtils())
-                    .toDecimals(
-                    wEth, 
-                        tokenBalances.getTokenBalance(assetList[i])
-                    ).mul(tokenUSD);
-
-                }
-                else{
+                        .toDecimals(
+                            wEth,
+                            tokenBalances.getTokenBalance(assetList[i])
+                        )
+                        .mul(tokenUSD);
+                } else {
                     nav += IHexUtils(IAPContract(APContract).stringUtils())
-                    .toDecimals(
-                        assetList[i],   
-                        tokenBalances.getTokenBalance(assetList[i])
-                    ).mul(tokenUSD);
+                        .toDecimals(
+                            assetList[i],
+                            tokenBalances.getTokenBalance(assetList[i])
+                        )
+                        .mul(tokenUSD);
                 }
             }
         }
@@ -134,8 +131,7 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
                 IHexUtils(IAPContract(APContract).stringUtils())
                     .toDecimals(_tokenAddress, _amount)
                     .mul(tokenUSD)
-            )
-                .div(1e18);
+            ).div(1e18);
     }
 
     /// @dev Function to get the amount of Vault Tokens to be minted for the deposit NAV.
@@ -153,9 +149,6 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
         }
     }
 
-    
-
-    
     /// @dev Function to update token balance in tokenBalances.
     /// @param tokenAddress Address of the Token.
     /// @param tokenAmount Amount of the tokens.
@@ -178,5 +171,9 @@ contract VaultStorage is MasterCopy,ERC20Detailed,ERC1155Receiver,Pausable{
         }
     }
 
-
+    /// @dev Function to check if assetList length is <1000
+    /// @param _increments The maximum size the assetList.length can be incremented by
+    function checkLength(uint256 _increments) internal view {
+        require(assetList.length + _increments < arrSize,"Exceeds safe assetList length");
+    }
 }

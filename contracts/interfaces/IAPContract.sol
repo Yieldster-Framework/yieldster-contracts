@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.1;
+pragma solidity 0.8.13;
 
 interface IAPContract {
     
@@ -31,4 +31,5 @@ interface IAPContract {
     function sdkContract() external returns (address);
     function getWETH()external view returns(address);
     function calculateSlippage(address ,address, uint256, uint256)external view returns(uint256);
+    function vaultsCount(address) external view returns(uint256);
 }

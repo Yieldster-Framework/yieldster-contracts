@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract dummyToken is ERC20 {
     constructor() ERC20("dummyDAI", "dDAI") {}
 
-    function mintTokens() public {
+    function mintTokens(uint256 amount) public {
         // Mint 1000 tokens to msg.sender
-        _mint(msg.sender, 1000 * 10**uint256(decimals()));
+        _mint(msg.sender, amount * 10**uint256(decimals()));
     }
 
     function mintTokensTo(address receiver) public {

@@ -27,6 +27,7 @@
     "@truffle/hdwallet-provider": "^1.2.6",
     "dotenv": "^8.2.0",
     "solc": "0.8.13",
-    "truffle-contract-size": "^2.0.1"
+    "truffle-contract-size": "^2.0.1",
+    "web3": "^1.7.3"
   }
 }

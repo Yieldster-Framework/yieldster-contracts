@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Factory {
+contract TokenFactory {
     event ERC20TokenCreated(address tokenAddress);
 
     function deployNewERC20Token(string calldata name, string calldata symbol)

@@ -17,7 +17,7 @@ contract("whiteTest", function (accounts) {
     let yieldsterVaultMasterCopy,whitelist;
     let manager;
 
-    describe("AP Module Functions", async () => {
+    describe("whitelist contract Functions", async () => {
         it("should create a new vault", async () => {
             //---------------------------------CREATING-TOKENS-OBJECT-------------------------------------------//
             ether = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"

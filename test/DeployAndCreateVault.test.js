@@ -1,4 +1,3 @@
-const truffleAssert = require('truffle-assertions');
 const utils = require("./utils/general");
 const convertUtils = require("./utils/conversion");
 const APContract = artifacts.require("./aps/APContract.sol");
@@ -117,7 +116,7 @@ contract("Should create a vault, test vault functions and deposit 10 different t
     })
 
     //test cases for deposit
-    it(`deposit 10 of ${tokens[0]} to the vault`, async () => {
+    it(`Should deposit 10 of ${tokens[0]} to the vault`, async () => {
         console.log(tokens[0])
         let token = await ERC20.at(tokens[0])
 
@@ -280,8 +279,5 @@ contract("Should create a vault, test vault functions and deposit 10 different t
 
 
 /**
-vault = await YieldsterVault.at("0x2458Bd30cd5d1012f5ABdd97b7098F68d0b84De9")
-let token = await ERC20.at("0x8C48f34F626cbAC5893a0c86fcCb13099C6d8F51")
-
-ganache --chain.asyncRequestProcessing false --chain.vmErrorsOnRPCResponse 
+ganache-cli --chain.asyncRequestProcessing false --chain.vmErrorsOnRPCResponse true
  */

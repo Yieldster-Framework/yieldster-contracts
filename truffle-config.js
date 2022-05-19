@@ -8,7 +8,9 @@ module.exports = {
       host: "localhost",
       provider: () => new Web3.providers.HttpProvider("http://127.0.0.1:8545"),
       port: 8545,
-      network_id: "*",
+      network_id: 1337,
+      websockets:true,
+      networkCheckTimeout:30000
     },
   },
   plugins: ["truffle-contract-size"],

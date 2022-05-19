@@ -7,7 +7,7 @@
 pragma solidity 0.8.13;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract priceModuleMock {
+contract MockPriceModule {
     using SafeMath for uint256;
 
     struct Token {
@@ -57,7 +57,7 @@ contract priceModuleMock {
     /// @dev Function to get price of a token.
     /// @param _tokenAddress Address of the token..
     function getUSDPrice(address _tokenAddress) public view returns (uint256) {
-        require(tokens[_tokenAddress].created, "Token not present");
+       // require(tokens[_tokenAddress].created, "Token not present");
 
         // Token Types
         //     1 = Token with price 1 dollar.
@@ -69,6 +69,10 @@ contract priceModuleMock {
             return uint256(1100000000000000000); //1.1
         } else if (tokens[_tokenAddress].tokenType == 3) {
             return uint256(2000000000000000000); //2.0
-        } else revert("Token not present");
+        }
+        else if (tokens[_tokenAddress].tokenType == 4) {
+            return uint256(4000000000000000000); //4.0
+        }
+         else revert("Token not present");
     }
 }

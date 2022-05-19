@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract dummyDAI is ERC20 {
-    constructor() ERC20("dummyDAI", "dDAI") {}
+    constructor() ERC20("dummyDAI","dDAI") {}
 
     function mintTokens(uint256 amount) public {
         // Mint 1000 tokens to msg.sender

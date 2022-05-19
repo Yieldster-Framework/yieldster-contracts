@@ -39,6 +39,7 @@ contract APContract is Initializable {
 
     address public wEth;
 
+    address public mStorage;
     struct Vault {
         mapping(address => bool) vaultAssets;
         mapping(address => bool) vaultDepositAssets;
@@ -118,7 +119,8 @@ contract APContract is Initializable {
         address _yieldsterExchange,
         address _exchangeRegistry,
         address _priceModule,
-        address _safeUtils
+        address _safeUtils,
+        address _mStorage
     ) public onlyYieldsterDAO {
         whitelistModule = _whitelistModule;
         platFormManagementFee = _platformManagementFee;
@@ -128,6 +130,7 @@ contract APContract is Initializable {
         priceModule = _priceModule;
         safeUtils = _safeUtils;
         profitManagementFee = _profitManagementFee;
+        mStorage = _mStorage;
     }
 
     /// @dev Function to add proxy Factory address to Yieldster.
@@ -376,7 +379,7 @@ contract APContract is Initializable {
 
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function setVaultStatus(address _vaultAddress)
+    function setVaultStatus(address _vaultAddress)    
     public
     {
         require(msg.sender == proxyFactory, "Only Proxy Factory can perform this operation");
@@ -710,4 +713,14 @@ contract APContract is Initializable {
         return vaultsOwnedByAdmin[_vaultAdmin];
     }
 
+    /// @dev Function to retrieve the storage of managementFee
+    function getPlatformFeeStorage() public view returns (address){
+        return mStorage;
+    }
+
+    /// @dev Function to set managementFeeStorage
+    /// @param _mStorage address of managementFeeStorage
+    function setManagementFeeStorage(address _mStorage) external onlyYieldsterDAO{
+        mStorage = _mStorage;
+    } 
 }

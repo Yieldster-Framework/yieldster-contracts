@@ -39,7 +39,10 @@ contract APContract is Initializable {
 
     address public wEth;
 
+    address public sdkContract;
+
     address public mStorage;
+    
     struct Vault {
         mapping(address => bool) vaultAssets;
         mapping(address => bool) vaultDepositAssets;
@@ -718,7 +721,15 @@ contract APContract is Initializable {
         return mStorage;
     }
 
+    /// @dev Function to set the storage of managementFee
+    /// @param _mStorage address of platform storage
     function setManagementFeeStorage(address _mStorage) external onlyYieldsterDAO{
         mStorage = _mStorage;
+    }
+
+    /// @dev Function to set the address of setSDKContract
+    /// @param _sdkContract address of sdkContract
+    function setSDKContract(address _sdkContract) external onlyYieldsterDAO {
+        sdkContract = _sdkContract;
     } 
 }

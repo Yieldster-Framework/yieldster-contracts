@@ -85,12 +85,13 @@ contract ProfitManagementFee is VaultStorage {
     function transferFee(address _tokenAddress, uint256 _feeAmountToTransfer)
         internal
     {
+        updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
         if (_tokenAddress == eth) {
-            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
             address payable to = payable(strategyBeneficiary);
-            to.transfer(_feeAmountToTransfer);
+            // to.transfer replaced here
+            (bool success, ) = to.call{value: _feeAmountToTransfer}("");
+
         } else {
-            updateTokenBalance(_tokenAddress, _feeAmountToTransfer, false);
             IERC20(_tokenAddress).safeTransfer(
                 strategyBeneficiary,
                 _feeAmountToTransfer

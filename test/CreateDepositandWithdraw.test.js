@@ -15,7 +15,7 @@ const {
     constants,    // Common constants, like the zero address and largest integers
     expectEvent,  // Assertions for emitted events
     expectRevert, // Assertions for transactions that should fail
-  } = require('@openzeppelin/test-helpers');
+} = require('@openzeppelin/test-helpers');
 
 contract("Should create a vault, test vault functions and deposit 10 different tokens to it", async (accounts) => {
 
@@ -101,7 +101,7 @@ contract("Should create a vault, test vault functions and deposit 10 different t
                 [],
             ),
             'Asset not supported by Yieldster',
-          );
+        );
     })
 
     it("Should set strategy percentage and beneficiary", async () => {
@@ -117,24 +117,32 @@ contract("Should create a vault, test vault functions and deposit 10 different t
 
     //test cases for deposit
     it(`Should deposit 10 of ${tokens[0]} to the vault`, async () => {
-        console.log(tokens[0])
         let token = await ERC20.at(tokens[0])
-
         await token.approve(testVault.address, convertUtils.to18("10"))
-        
-        console.log((await token.allowance(accounts[0],testVault.address)).toString())
         await testVault.deposit(token.address, convertUtils.to18("10"));
-        console.log((await token.balanceOf(testVault.address)).toString())
-        console.log((await testVault.getVaultNAV()).toString())
+        console.log("Token Balance of tokens[0]:-", (await token.balanceOf(testVault.address)).toString())
+        console.log("Vault NAV", (await testVault.getVaultNAV()).toString())
 
         // assert.equal(10, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
     })
 
-    // it("deposit 1 Ether to the vault", async () => {
-    //     assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
-    //     await testVault.deposit(ether, convertUtils.to18("1"), { value: convertUtils.to18("1"), from: accounts[0] });
-    //     assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+    // //test cases for deposit
+    // it(`Should deposit 10 of ${tokens[0]} to the vault`, async () => {
+    //     let token = await ERC20.at(tokens[0])
+    //     await token.approve(testVault.address, convertUtils.to18("10"))
+    //     console.log((await token.allowance(accounts[0], testVault.address)).toString())
+    //     await testVault.deposit(token.address, convertUtils.to18("10"));
+    //     console.log((await token.balanceOf(testVault.address)).toString())
+    //     console.log((await testVault.getVaultNAV()).toString())
+    //     // assert.equal(10, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
     // })
+
+    it("deposit 1 Ether to the vault", async () => {
+        assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+        await testVault.deposit(ether, convertUtils.to18("1"), { value: convertUtils.to18("1"), from: accounts[0] });
+        assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+        console.log((await testVault.getVaultNAV()).toString())
+    })
 
     // it("direct transfer 10 dai", async () => {
     //     assert.equal(10, convertUtils.from18((await testVault.getTokenBalance(dai.address)).toString()))
@@ -279,5 +287,8 @@ contract("Should create a vault, test vault functions and deposit 10 different t
 
 
 /**
-ganache-cli --chain.asyncRequestProcessing false --chain.vmErrorsOnRPCResponse true
+ganache-cli --chain.asyncRequestProcessing false --chain.vmErrorsOnRPCResponse true --networkId 1337
+
+0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+0x0000000000000000000000000000000000000000
  */

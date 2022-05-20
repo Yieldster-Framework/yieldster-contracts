@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract ProfitManagementFee is VaultStorage {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    event CallStatusInProfitFee(string message);
+
 
     /// @notice This function is called for each deposit and withdrawal
     /// @dev Delegate calls are made from the vault to this function.
@@ -90,6 +92,9 @@ contract ProfitManagementFee is VaultStorage {
             address payable to = payable(strategyBeneficiary);
             // to.transfer replaced here
             (bool success, ) = to.call{value: _feeAmountToTransfer}("");
+            if (success == false) {  
+                    emit CallStatusInProfitFee("call failed in profitManagementee");
+                    }
 
         } else {
             IERC20(_tokenAddress).safeTransfer(

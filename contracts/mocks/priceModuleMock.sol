@@ -57,7 +57,7 @@ contract MockPriceModule {
     /// @dev Function to get price of a token.
     /// @param _tokenAddress Address of the token..
     function getUSDPrice(address _tokenAddress) public view returns (uint256) {
-        require(tokens[_tokenAddress].created, "Token not present");
+       // require(tokens[_tokenAddress].created, "Token not present");
 
         // Token Types
         //     1 = Token with price 1 dollar.

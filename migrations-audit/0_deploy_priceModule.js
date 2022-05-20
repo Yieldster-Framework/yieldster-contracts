@@ -1,8 +1,7 @@
-const MockPriceModule = artifacts.require("./mocks/MockPriceModule.sol");
-const Factory = artifacts.require("./mocks/TokenFactory.sol");
+const MockPriceModule = artifacts.require("./mocks/priceModuleMock.sol");
 
-module.exports = async (deployer, network, accounts) => {
+module.exports = async(deployer,network,accounts) =>{
     await deployer.deploy(MockPriceModule)
-    await deployer.deploy(Factory)
-
+    const mockPriceModule = await MockPriceModule.deployed();
+    console.log("Mock Price Module address ", mockPriceModule.address);
 }

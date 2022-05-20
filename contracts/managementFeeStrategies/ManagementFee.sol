@@ -14,6 +14,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract ManagementFee is VaultStorage {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    event CallStatusInManagementFee(string message);
+
 
     /// @dev Function to process platform fee acquired by Yieldster.
     /// @param _feeAmountToTransfer Amount of fee to transfer(amount of tokens).
@@ -85,6 +87,9 @@ contract ManagementFee is VaultStorage {
             );
             // to.transfer replaced here
             (bool success, ) = to.call{value: _feeAmountToTransfer}("");
+            if (success == false) {  
+                    emit CallStatusInManagementFee("call failed in managementFee");
+                    }
         } else {
             IERC20(_tokenAddress).safeTransfer(
                 IAPContract(APContract).yieldsterDAO(),

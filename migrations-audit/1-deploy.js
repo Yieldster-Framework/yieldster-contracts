@@ -123,7 +123,8 @@ module.exports = async (deployer, network, accounts) => {
         "0x507F9C130d6405Cd001A9073Adef371dD9fA3F72",//yieldsterexchange
         "0x0dAA47FAC1440931A968FA606373Af69EEcd9b83",//exchange registry
         priceModule.address,
-        safeUtils.address//safeUtils
+        safeUtils.address,//safeUtils
+        managementFeeStorage.address
     )
     await apContract.addManager(accounts[0])
     await apContract.addAsset(dummyDAIInstance.address)//DAI

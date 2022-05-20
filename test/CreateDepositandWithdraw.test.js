@@ -41,11 +41,14 @@ contract("Should create a vault, test vault functions and deposit 10 different t
         await apContract.addAsset(ether)
         await mockPriceModule.addToken(ether, "4")
         let indices = tokens.map((e, i) => i % 3 + 1);
+
         await mockPriceModule.addTokenInBatches(tokens, indices)
         for (let index = 0; index < tokens.length; index++) {
             let token = tokens[index];
             await apContract.addAsset(token)
         }
+        await apContract.setWETH(tokens[0])
+
     })
 
     it("Should create a new vault", async () => {
@@ -116,173 +119,162 @@ contract("Should create a vault, test vault functions and deposit 10 different t
     })
 
     //test cases for deposit
-    it(`Should deposit 10 of ${tokens[0]} to the vault`, async () => {
+    it(`Should deposit 100 of tokens[0] to the vault from accounts[0]`, async () => {
         let token = await ERC20.at(tokens[0])
-        await token.approve(testVault.address, convertUtils.to18("10"))
-        await testVault.deposit(token.address, convertUtils.to18("10"));
-        console.log("Token Balance of tokens[0]:-", (await token.balanceOf(testVault.address)).toString())
-        console.log("Vault NAV", (await testVault.getVaultNAV()).toString())
-
-        // assert.equal(10, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
+        await token.approve(testVault.address, convertUtils.to18("100"))
+        await testVault.deposit(token.address, convertUtils.to18("100"));
+        assert.equal(100, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
     })
 
-    // //test cases for deposit
-    // it(`Should deposit 10 of ${tokens[0]} to the vault`, async () => {
-    //     let token = await ERC20.at(tokens[0])
-    //     await token.approve(testVault.address, convertUtils.to18("10"))
-    //     console.log((await token.allowance(accounts[0], testVault.address)).toString())
-    //     await testVault.deposit(token.address, convertUtils.to18("10"));
-    //     console.log((await token.balanceOf(testVault.address)).toString())
-    //     console.log((await testVault.getVaultNAV()).toString())
-    //     // assert.equal(10, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
-    // })
-
-    it("deposit 1 Ether to the vault", async () => {
+    it("should deposit 1 Ether to the vault from accounts[0]", async () => {
         assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+        await mockPriceModule.addToken(ether, "4")
         await testVault.deposit(ether, convertUtils.to18("1"), { value: convertUtils.to18("1"), from: accounts[0] });
         assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
-        console.log((await testVault.getVaultNAV()).toString())
+    })
+   
+
+    it("Should direct transfer 100 of tokens[0] to the vault & getTokenBalance should not get updated", async () => {
+        let token = await ERC20.at(tokens[0])
+        assert.equal(100, convertUtils.from18((await testVault.getTokenBalance(token.address)).toString()))
+        assert.equal(100, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
+        await token.transfer(testVault.address, convertUtils.to18("100"), { from: accounts[0] });
+        assert.equal(100, convertUtils.from18((await testVault.getTokenBalance(token.address)).toString()))
+        assert.equal(200, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
     })
 
-    // it("direct transfer 10 dai", async () => {
-    //     assert.equal(10, convertUtils.from18((await testVault.getTokenBalance(dai.address)).toString()))
-    //     assert.equal(10, convertUtils.from18((await dai.balanceOf(testVault.address)).toString()))
-    //     await dai.transfer(testVault.address, convertUtils.to18("10"), { from: accounts[0] });
-    //     assert.equal(10, convertUtils.from18((await testVault.getTokenBalance(dai.address)).toString()))
-    //     assert.equal(20, convertUtils.from18((await dai.balanceOf(testVault.address)).toString()))
-    // })
-
-    // it("direct transfer 1 ether", async () => {
-    //     assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
-    //     assert.equal(1, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
-    //     await web3.eth.sendTransaction({ to: testVault.address, from: accounts[1], value: convertUtils.to18("1") })            
-    //     assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
-    //     assert.equal(2, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
-    // })
-
-    // it("deposit 10 USDC to the vault (asset is not part of vaultAsset)", async () => {
-    //     try {
-    //         await usdc.approve(testVault.address, convertUtils.to6("100"), {
-    //             from: accounts[0]
-    //         })
-    //         await testVault.deposit(usdc.address, convertUtils.to6("100"), {
-    //             from: accounts[0]
-    //         });
-    //     } catch (err) {
-    //         assert.include(err.message, "Not an approved deposit asset", "The error message should contain 'Not an approved deposit asset'");
-    //     }
-    // })
+    it("Should direct transfer 1 ether to vault & getTokenBalance should not get updated", async () => {
+        assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+        assert.equal(1, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
+        await web3.eth.sendTransaction({ to: testVault.address, from: accounts[1], value: convertUtils.to18("1") })            
+        assert.equal(1, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
+        assert.equal(2, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
+    })
 
 
+it(`Should Transfer 200 of tokens[1] to accounts[1] & depoit 100 to vault from accounts[1] `, async () => {
+    let token = await ERC20.at(tokens[1])
+    await token.transfer(accounts[1],convertUtils.to18("200"))
+    await token.approve(testVault.address, convertUtils.to18("100"),{from:accounts[1]})
+    await testVault.deposit(token.address, convertUtils.to18("100"),{from:accounts[1]});
+})
+
+it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () => {
+    let token = await ERC20.at(tokens[1])
+    let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+    await testVault.withdraw(token.address, convertUtils.to18("80"), { from: accounts[0], gas: 10000000 });
+    let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+    assert.equal(80, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
+})
+
+
+
+//try putting usdc
+    it("Should deposit 10 usdc to the vault (asset is not part of vaultAsset)", async () => {
+        let usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+        await expectRevert(
+            testVault.deposit(usdc, convertUtils.to6("100"), {from:accounts[0]}),
+            "Not an approved deposit asset",
+        )
+    });
 
     // //test cases for withdraw
-    // //3082 tokens
-    // it("withdraw 2 vault tokens in dai", async () => {
-    //     let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-    //     await testVault.withdraw(dai.address, convertUtils.to18("2"), { from: accounts[0], gas: 10000000 });
-    //     let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-    //     assert.equal(2, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
-    // })
+    it("Should withdraw 5 vault tokens in tokens[0]", async () => {
+        let token = await ERC20.at(tokens[0])
+        let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+        await testVault.withdraw(token.address, convertUtils.to18("5"), { from: accounts[0], gas: 10000000 });
+        let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+        assert.equal(5, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
+    })
 
-    // it("withdraw 10 vault tokens in dai from user not having vault token", async () => {
-    //     try {
-    //         await testVault.withdraw(dai.address, convertUtils.to18("10"), { from: accounts[3], gas: 10000000 });
-    //     } catch (err) {
-    //         assert.include(err.message, "You don't have enough shares", "The error message should contain 'You don't have enough shares'");
-    //     }
-    // })
+    it("Should withdraw 10 vault tokens in tokens[0] from user not having vault token", async () => {
+        let token = await ERC20.at(tokens[0])
+        await expectRevert(
+             testVault.withdraw(token.address, convertUtils.to18("10"), { from: accounts[3], gas: 10000000 }),
+            "You don't have enough shares",
+        )
+    })
 
-    // it("withdraw 100 vault tokens in ether", async () => {
-    //     let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-    //     await testVault.withdraw(ether, convertUtils.to18("100"), { from: accounts[0], gas: 10000000 });
-    //     let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-    //     assert.equal(100, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
-    // })
+    it("Should withdraw 1 vault tokens in ether", async () => {
+        let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+        await testVault.withdraw(ether, convertUtils.to18("1"), { from: accounts[0], gas: 10000000 });
+        let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+        assert.equal(1, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
+    })
 
-    // it("withdraw 1000 vault tokens in usdt, but enough usdt is not present in vault", async () => {
-    //     try {
-    //         await testVault.withdraw(usdt.address, convertUtils.to18("1000"), { from: accounts[0], gas: 10000000 });
-    //     } catch (err) {
-    //         assert.include(err.message, "required asset not present in vault", "The error message should contain 'required asset not present in vault'");
-    //     }
-    // })
+    it("Should withdraw 5 vault tokens in  ${tokens[2], but enough  ${tokens[2] is not present in vault", async () => {
+        let token2 = await ERC20.at(tokens[2])
+        let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
+        try {
+            await testVault.withdraw(token2.address, convertUtils.to18("5"), { from: accounts[0], gas: 10000000 });
+        } catch (err) {
+            assert.include(err.message, "required asset not present in vault", "The error message should contain 'required asset not present in vault'");
+        }
+    })
 
-    // //ERC1155 test
-    // it("NFT received from other random NFT contract", async () => {
-    //     let airData = web3.eth.abi.encodeFunctionCall({
-    //         name: "addNewAirline",
-    //         type: "function",
-    //         inputs: [{
-    //             name: "initialSupply",
-    //             type: "uint256",
-    //         }
-    //         ]
-    //     }, [convertUtils.to18("5")])
+    
+    //out of gas test cases
+    it("Should enable emergency exit with large number of assets", async () => {
+        let token = await ERC20.at(tokens[0])
+        let token2 = await ERC20.at(tokens[2])
 
-    //     try {
-    //         await airlineTokens.mintVal(testVault.address, airData)
-    //     } catch (err) {
-    //         assert.include(err.message, "Only Safe Minter", "The error message should contain 'Only Safe Minter'")
-    //     }
-    // })
+        god = await apContract.yieldsterGOD();
+        assert.equal(god, accounts[0], "account[0] not god")
+        await apContract.setEmergencyVault(accounts[4]);
+        await token.approve(testVault.address, convertUtils.to18("100"), {
+            from: accounts[0]
+        })
+        await testVault.deposit(token.address, convertUtils.to18("100"), {
+            from: accounts[0]
+        });
+        await token2.approve(testVault.address, convertUtils.to6("100"), {
+            from: accounts[0]
+        })
+        await testVault.deposit(token2.address, convertUtils.to6("100"), {
+            from: accounts[0]
+        });
+        await testVault.enableEmergencyExit({ from: god })
+    })
 
-    // //out of gas test cases
-    // it("enable emergency exit with large number of assets", async () => {
-    //     god = await apContract.yieldsterGOD();
-    //     assert.equal(god, accounts[0], "account[0] not god")
-    //     await apContract.setEmergencyVault(accounts[4]);
-    //     await dai.approve(testVault.address, convertUtils.to18("100"), {
-    //         from: accounts[0]
-    //     })
-    //     await testVault.deposit(dai.address, convertUtils.to18("100"), {
-    //         from: accounts[0]
-    //     });
-    //     await usdt.approve(testVault.address, convertUtils.to6("100"), {
-    //         from: accounts[0]
-    //     })
-    //     await testVault.deposit(usdt.address, convertUtils.to6("100"), {
-    //         from: accounts[0]
-    //     });
-    //     await testVault.enableEmergencyExit({ from: god })
-    // })
+    //TODO isWhitelisted test
 
-    // //TODO isWhitelisted test
-
-    // //god based test cases
-    // it("set yieldster vault by non god", async () => {
-    //     god = await apContract.yieldsterGOD();
-    //     assert.equal(god, accounts[0], "account[0] not god")
-    //     try {
-    //         await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address, { from: accounts[3] })
-    //     } catch (err) {
-    //         assert.include(err.message, "unauthorized", "The error message should contain 'unauthorized'")
-    //     }
-    // })
+    //god based test cases
+    it("Should not be able to set yieldster vault by non god", async () => {
+        god = await apContract.yieldsterGOD();
+        assert.equal(god, accounts[0], "account[0] not god")
+        try {
+            await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address, { from: accounts[3] })
+        } catch (err) {
+            assert.include(err.message, "unauthorized", "The error message should contain 'unauthorized'")
+        }
+    })
 
 
-    // it("set yieldster vault god", async () => {
-    //     god = await apContract.yieldsterGOD();
-    //     assert.equal(god, accounts[0], "account[0] not god")
-    //     await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address, { from: god })
-    // })
+    it("Should not be able to set APS by non god", async () => {
+        god = await apContract.yieldsterGOD();
+        assert.equal(god, accounts[0], "account[0] not god")
+        try {
+            await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", { from: accounts[3] })
+        } catch (err) {
+            assert.include(err.message, "unauthorized", "The error message should contain 'unauthorized'")
+        }
+    })
 
-    // it("set APS by non god", async () => {
-    //     god = await apContract.yieldsterGOD();
-    //     assert.equal(god, accounts[0], "account[0] not god")
-    //     try {
-    //         await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", { from: accounts[3] })
-    //     } catch (err) {
-    //         assert.include(err.message, "unauthorized", "The error message should contain 'unauthorized'")
-    //     }
-    // })
+    it("Should set APS by god", async () => {
+        god = await apContract.yieldsterGOD();
+        await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", { from: god })
+        aps = await testVault.APContract()
+        assert.equal(aps, "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", "error : aps not changed")
 
-    // it("set APS by god", async () => {
-    //     god = await apContract.yieldsterGOD();
-    //     await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", { from: god })
-    //     aps = await testVault.APContract()
-    //     assert.equal(aps, "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c", "error : aps not changed")
+    })
 
-    // })
+    it("Should set yieldster vault god", async () => {
+        await apContract.setYieldsterGOD(accounts[9],{from:accounts[0]});
+        god = await apContract.yieldsterGOD();
+        assert.equal(god, accounts[9], "account[0] not god")
+     //   await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address, { from: god })
+    })
 });
 
 

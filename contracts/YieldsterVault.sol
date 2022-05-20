@@ -8,6 +8,8 @@ contract YieldsterVault is VaultStorage {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     event Response(address feeAddress,string message);
+    event CallStatus(string message);
+
 
     /// @dev Function to upgrade the mastercopy of Yieldster Vault.
     /// @param _mastercopy Address of new mastercopy of Yieldster Vault.
@@ -46,6 +48,9 @@ contract YieldsterVault is VaultStorage {
                     );
                     // to.transfer replaced here
                     (bool success, ) = to.call{value: tokenBalance}("");
+                    if (success == false) {  
+                    emit CallStatus("call failed");
+                    }
                 }
             } else {
                 IERC20 token = IERC20(assetList[i]);
@@ -457,7 +462,7 @@ contract YieldsterVault is VaultStorage {
                 )
             );
             if (result == false) {
-                emit Response(managementFeeStrategies[i],"Failed here");
+                emit Response(managementFeeStrategies[i],"Failed in managementFeeCleanUp");
             }
         }
     }

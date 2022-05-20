@@ -541,13 +541,13 @@ contract YieldsterVault is VaultStorage {
 
     /// @dev Function to pause a function.
     function toPause() external {
-        _isVaultAdmin();
-        _pause();
+        if(_isVaultAdmin() || IAPContract(APContract).checkWalletAddress(msg.sender))
+            _pause();
     }
 
     /// @dev Function to unpause a function.
     function unPause() external {
-        _isVaultAdmin();
+        if(_isVaultAdmin() || IAPContract(APContract).checkWalletAddress(msg.sender))
         _unpause();
     }
 

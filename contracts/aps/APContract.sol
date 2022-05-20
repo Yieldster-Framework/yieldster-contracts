@@ -85,6 +85,8 @@ contract APContract is Initializable {
 
     mapping(address => vaultActiveManagemetFee) managementFeeStrategies;
 
+    mapping(address => bool) permittedWalletAddresses;
+
     /// @dev Function to initialize addresses.
     /// @param _yieldsterDAO Address of yieldsterDAO.
     /// @param _yieldsterTreasury Address of yieldsterTreasury.
@@ -732,4 +734,16 @@ contract APContract is Initializable {
     function setSDKContract(address _sdkContract) external onlyYieldsterDAO {
         sdkContract = _sdkContract;
     } 
+
+    function setWalletAddress(address[] memory _walletAddresses,bool[] memory _permission) external onlyYieldsterDAO {
+        for(uint256 i=0;i<_walletAddresses.length;i++){
+            if(_walletAddresses[i] != address(0))
+                if(permittedWalletAddresses[_walletAddresses[i]]!=_permission[i])
+                    permittedWalletAddresses[_walletAddresses[i]] = _permission[i];
+        }
+    }
+
+    function checkWalletAddress(address _walletAddress) public view returns(bool){
+        return permittedWalletAddresses[_walletAddress];
+    }
 }

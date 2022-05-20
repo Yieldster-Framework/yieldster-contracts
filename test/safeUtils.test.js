@@ -109,7 +109,7 @@ contract("Should create Vault and test various safeUtils functions", async (acco
     })
 
 
-    it("should encode", async () => {
+    it("should encode token2Data ", async () => {
         token2Data = web3.eth.abi.encodeFunctionCall({
             name: "approvedAssetCleanUp",
             type: "function",
@@ -129,7 +129,7 @@ contract("Should create Vault and test various safeUtils functions", async (acco
 
     })
 
-    it("should encode2", async () => {
+    it("should encode ethdata", async () => {
 
         ethData = web3.eth.abi.encodeFunctionCall({
             name: "approvedAssetCleanUp",

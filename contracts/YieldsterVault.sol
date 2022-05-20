@@ -539,10 +539,15 @@ contract YieldsterVault is VaultStorage {
             );
     }
 
+    function isVaultAdmin() private view returns(bool) {
+        return (msg.sender == vaultAdmin);
+    }
+
     /// @dev Function to pause a function.
     function toPause() external {
         if(msg.sender == vaultAdmin || IAPContract(APContract).checkWalletAddress(msg.sender))
             _pause();
+        
     }
 
     /// @dev Function to unpause a function.

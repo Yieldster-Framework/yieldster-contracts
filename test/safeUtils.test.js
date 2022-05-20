@@ -15,12 +15,6 @@ function to18(n) {
 function from18(n) {
     return web3.utils.fromWei(n, "ether");
 }
-function to6(n) {
-    return web3.utils.toWei(n, "Mwei");
-}
-function from6(n) {
-    return web3.utils.fromWei(n, "Mwei");
-}
 
 contract("Should create Vault and test various safeUtils functions", async (accounts) => {
 
@@ -55,82 +49,6 @@ contract("Should create Vault and test various safeUtils functions", async (acco
         );
         await testVault.registerVaultWithAPS();
 
-        // ethData = web3.eth.abi.encodeFunctionCall({
-        //     name: "approvedAssetCleanUp",
-        //     type: "function",
-        //     inputs: [{
-        //         name: "_assetList",
-        //         type: "address[]",
-        //     }, {
-        //         name: "_amount",
-        //         type: "uint256[]",
-        //     }, {
-        //         name: "reciever",
-        //         type: "address[]",
-        //     },
-        //     ]
-        // }, [[ether], [web3.utils.toWei('2', "ether")], [accounts[3]]])
-        console.log("3", accounts[3])
-        console.log("9", accounts[9])
-
-
-
-    })
-
-
-
-    it(`Should create 10 unique tokens and mint them to ${accounts[0]}`, async () => {
-        tokens = await deployTokens(10, tokenFactory);
-        await mintTokens(tokens, accounts[0])
-    })
-
-    it("Should add these tokens to priceModule and aps", async () => {
-        await apContract.addAsset(ether)
-        await mockPriceModule.addToken(ether, "4")
-        let indices = tokens.map((e, i) => i % 3 + 1);
-
-        await mockPriceModule.addTokenInBatches(tokens, indices)
-        for (let index = 0; index < tokens.length; index++) {
-            let token = tokens[index];
-            await apContract.addAsset(token)
-        }
-        await apContract.setWETH(tokens[0])
-
-    })
-
-    it("Should transfer tokens[1] and tokens[2] to accounts[1] and accounts[3] respectively", async () => {
-        token1 = await ERC20.at(tokens[1])
-        token2 = await ERC20.at(tokens[2])
-
-        await token2.transfer(accounts[3], to6("2000"))
-        await token1.transfer(accounts[1], to18("2000"))
-        await token2.transfer(accounts[1], to6("8000"))
-
-    })
-
-
-    it("should encode token2Data ", async () => {
-        token2Data = web3.eth.abi.encodeFunctionCall({
-            name: "approvedAssetCleanUp",
-            type: "function",
-            inputs: [{
-                name: "_assetList",
-                type: "address[]",
-            }, {
-                name: "_amount",
-                type: "uint256[]",
-
-            }, {
-                name: "reciever",
-                type: "address[]",
-            },
-            ]
-        }, [[token2.address], [to6("200")], [accounts[3]]])
-
-    })
-
-    it("should encode ethdata", async () => {
-
         ethData = web3.eth.abi.encodeFunctionCall({
             name: "approvedAssetCleanUp",
             type: "function",
@@ -146,27 +64,71 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             },
             ]
         }, [[ether], [web3.utils.toWei('2', "ether")], [accounts[3]]])
-        console.log("ethdata", ethData)
+    })
+
+    it(`Should create 10 unique tokens and mint them to ${accounts[0]}`, async () => {
+        tokens = await deployTokens(10, tokenFactory);
+        await mintTokens(tokens, accounts[0])
+    })
+
+    it("Should add these tokens to priceModule and aps", async () => {
+        await mockPriceModule.addToken(ether, "4")
+        await apContract.addAsset(ether)
+
+        let indices = tokens.map((e, i) => i % 3 + 1);
+        await mockPriceModule.addTokenInBatches(tokens, indices)
+        for (let index = 0; index < tokens.length; index++) {
+            let token = tokens[index];
+            await apContract.addAsset(token)
+        }
+        await apContract.setWETH(tokens[0])
+
+    })
+
+    it("Should transfer tokens[1] and tokens[2] to accounts[1] and accounts[3] respectively", async () => {
+        token1 = await ERC20.at(tokens[1])
+        token2 = await ERC20.at(tokens[2])
+
+        await token2.transfer(accounts[3], to18("2000"))
+        await token2.transfer(accounts[1], to18("8000"))
+        await token1.transfer(accounts[1], to18("2000"))
     })
 
 
-    // should test managementFeeCleanup
+    it("should encode token2Data and ethData", async () => {
+        token2Data = web3.eth.abi.encodeFunctionCall({
+            name: "approvedAssetCleanUp",
+            type: "function",
+            inputs: [{
+                name: "_assetList",
+                type: "address[]",
+            }, {
+                name: "_amount",
+                type: "uint256[]",
+
+            }, {
+                name: "reciever",
+                type: "address[]",
+            },
+            ]
+        }, [[token2.address], [to18("200")], [accounts[3]]])
+
+    })
 
     it("Should set Safe Minter", async () => {
         await apContract.setSafeMinter(safeMinter.address);
         assert.equal(await apContract.safeMinter(), safeMinter.address, "error: safe minter address mismatch")
-
     })
 
-    it("Function to test payBackExecutor", async () => {
+    it("Should transfer encoded tokens to beneficiary via paybackExecutor function)", async () => {
         await testVault.setVaultAssets(
             [token1.address, ether, token2.address],
             [token1.address, ether, token2.address],
             [],
             [],
         );
-        await token2.approve(testVault.address, to6("200"), { from: accounts[1] })
-        await testVault.deposit(token2.address, to6("200"), { from: accounts[1] });
+        await token2.approve(testVault.address, to18("200"), { from: accounts[1] })
+        await testVault.deposit(token2.address, to18("200"), { from: accounts[1] });
         await testVault.deposit(ether, to18("20"), { value: web3.utils.toWei('20', "ether"), from: accounts[1], gas: 10000000 });
 
         let token2Pay = web3.eth.abi.encodeFunctionCall({
@@ -184,7 +146,7 @@ contract("Should create Vault and test various safeUtils functions", async (acco
                 type: "address[]",
             },
             ]
-        }, [[to18("5"), to6("50")], [accounts[9], accounts[2]], [ether, token2.address]])
+        }, [[to18("5"), to18("50")], [accounts[9], accounts[2]], [ether, token2.address]])
 
         await safeMinter.mintStrategy(testVault.address, token2Pay, { from: accounts[0] });
 
@@ -194,15 +156,13 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             "incorrect value"
         );
         assert.equal(
-            from6((await token2.balanceOf(accounts[2])).toString()),
+            from18((await token2.balanceOf(accounts[2])).toString()),
             50,
             "incorrect value"
         );
     });
 
-
-
-    it("token1 token balance updation", async () => {
+    it("Should update balance of token1 via tokenBalanceUpdation function)", async () => {
         await testVault.setVaultAssets(
             [token1.address],
             [token1.address],
@@ -240,7 +200,7 @@ contract("Should create Vault and test various safeUtils functions", async (acco
         );
     });
 
-    it("token2 is unapproved and safe cleanup asset", async () => {
+    it("Should transfer unsupported tokens to yieldster treasury via safeCleanUp", async () => {
         await testVault.setVaultAssets(
             [token1.address],
             [token1.address],
@@ -248,15 +208,12 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             [],
         );
         await apContract.setYieldsterTreasury(accounts[9])
-
-        console.log("treasury", await apContract.yieldsterTreasury())
-
         await token1.approve(testVault.address, to18("200"), { from: accounts[1] })
         await testVault.deposit(token1.address, to18("200"), { from: accounts[1] });
-        await token2.transfer(testVault.address, to6("200"), { from: accounts[3] })
+        await token2.transfer(testVault.address, to18("200"), { from: accounts[3] })
 
         assert.equal(
-            from6((await token2.balanceOf(accounts[9])).toString()),
+            from18((await token2.balanceOf(accounts[9])).toString()),
             0,
             "incorrect value"
         );
@@ -264,14 +221,14 @@ contract("Should create Vault and test various safeUtils functions", async (acco
         await safeMinter.mintStrategy(testVault.address, encoded);
 
         assert.equal(
-            from6((await token2.balanceOf(accounts[9])).toString()),
+            from18((await token2.balanceOf(accounts[9])).toString()),
             200,
             "incorrect value"
         );
     });
 
 
-    it("case1:token2 is approved", async () => {
+    it("Should mint vault tokens to account when an approved vault asset is directly transfered by them", async () => {
         await testVault.setVaultAssets(
             [token1.address, token2.address],
             [token1.address, token2.address],
@@ -279,17 +236,17 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             [],
         );
 
-        await token2.approve(testVault.address, to6("200"), { from: accounts[1] })
-        await testVault.deposit(token2.address, to6("200"), { from: accounts[1] });
-        await token2.transfer(testVault.address, to6("200"), { from: accounts[3] })
+        await token2.approve(testVault.address, to18("200"), { from: accounts[1] })
+        await testVault.deposit(token2.address, to18("200"), { from: accounts[1] });
+        await token2.transfer(testVault.address, to18("200"), { from: accounts[3] })
 
         assert.equal(
-            from6((await testVault.balanceOf(accounts[1])).toString()),
+            from18((await testVault.balanceOf(accounts[1])).toString()),
             200,
             "incorrect value"
         );
         assert.equal(
-            from6((await testVault.balanceOf(accounts[3])).toString()),
+            from18((await testVault.balanceOf(accounts[3])).toString()),
             0,
             "incorrect value"
         );
@@ -297,31 +254,26 @@ contract("Should create Vault and test various safeUtils functions", async (acco
         await safeMinter.mintStrategy(testVault.address, token2Data);
 
         assert.equal(
-            from6((await testVault.balanceOf(accounts[1])).toString()),
+            from18((await testVault.balanceOf(accounts[1])).toString()),
             200,
             "incorrect value"
         );
         assert.equal(
-            from6((await testVault.balanceOf(accounts[3])).toString()),
+            from18((await testVault.balanceOf(accounts[3])).toString()),
             200,
             "incorrect value"
         );
     });
 
-    it("case2:ether is approved", async () => {
+    it("Should mint vault tokens to account when an approved vault asset(ether) is directly transfered by them", async () => {
         await testVault.setVaultAssets(
             [token1.address, ether],
             [token1.address, ether],
             [],
             [],
         );
-        console.log("treasury", await apContract.yieldsterTreasury())
-        console.log("vault bal 0f [1]", from18((await testVault.balanceOf(accounts[1])).toString()))
-        console.log("vault bal 0f [33]", from18((await testVault.balanceOf(accounts[1])).toString()))
-
         await testVault.deposit(ether, to18("2"), { value: web3.utils.toWei('2', "ether"), from: accounts[1], gas: 10000000 });
-        await web3.eth.sendTransaction({ to: testVault.address, from: accounts[7], value: web3.utils.toWei('2', "ether"), gas: 1000000000 })
-        console.log("vault bal 0f [1]", from18((await testVault.balanceOf(accounts[1])).toString()))
+        await web3.eth.sendTransaction({ to: testVault.address, from: accounts[7], value: web3.utils.toWei('2', "ether"), gas: 10000000 })
 
         assert.equal(
             from18((await testVault.balanceOf(accounts[1])).toString()),
@@ -333,37 +285,31 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             0,
             "incorrect value"
         );
-        console.log("eth bal of this", (await web3.eth.getBalance(testVault.address)).toString())
 
         await safeMinter.mintStrategy(testVault.address, ethData);
-        console.log("eth bal of this", (await web3.eth.getBalance(testVault.address)).toString())
         assert.equal(
             from18((await testVault.balanceOf(accounts[1])).toString()),
             2,
             "incorrect value"
         );
-        // assert.equal(
-        //     from18((await testVault.balanceOf(accounts[3])).toString()),
-        //     2,
-        //     "incorrect value"
-        // );
-
-        console.log("vault bal 0f [3]", from18((await testVault.balanceOf(accounts[3])).toString()))
-        console.log("vault bal 0f [9]", from18((await testVault.balanceOf(accounts[7])).toString()))
+        assert.equal(
+            from18((await testVault.balanceOf(accounts[3])).toString()),
+            2,
+            "incorrect value"
+        );
     });
 
 
-    it("case3:Direct transfer token ,token2 is not approved", async () => {
+    it("Should not mint vault tokens to account when an unapproved vault asset is directly transfered by them", async () => {
         await testVault.setVaultAssets(
             [token1.address],
             [token1.address],
             [],
             [],
         );
-
         await token1.approve(testVault.address, to18("200"), { from: accounts[1] })
         await testVault.deposit(token1.address, to18("200"), { from: accounts[1] });
-        await token2.transfer(testVault.address, to6("200"), { from: accounts[3] })
+        await token2.transfer(testVault.address, to18("200"), { from: accounts[3] })
         assert.equal(
             from18((await testVault.balanceOf(accounts[1])).toString()),
             200,
@@ -385,11 +331,10 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             0,
             "incorrect value"
         );
-
     });
 
 
-    it("case4:Direct transfer token ether is not approved", async () => {
+    it("Should not mint vault tokens to account when an unapproved vault asset(ether) is directly transfered by them", async () => {
         await testVault.setVaultAssets(
             [token1.address],
             [token1.address],
@@ -422,6 +367,4 @@ contract("Should create Vault and test various safeUtils functions", async (acco
             "incorrect value"
         );
     });
-
-
 });

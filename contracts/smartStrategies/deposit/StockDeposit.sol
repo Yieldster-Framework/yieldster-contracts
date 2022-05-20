@@ -11,7 +11,7 @@ contract StockDeposit is VaultStorage {
     /// @dev Function to Deposit assets into the Vault.
     /// @param _tokenAddress Address of the deposit token.
     /// @param _amount Amount of deposit token.
-    function deposit(address _tokenAddress, uint256 _amount) public payable {
+    function deposit(address _tokenAddress, uint256 _amount) public payable nonReentrant {
         uint256 _share;
         address tokenAddress;
         IERC20 token;

@@ -8,7 +8,7 @@ contract TokenBalanceStorage {
     address private owner;
     mapping(address=>uint256) tokenBalance;
 
-    constructor() public {
+    constructor(){
         // blockNumber = block.number;
         owner = msg.sender;
     }

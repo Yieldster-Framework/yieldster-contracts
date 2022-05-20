@@ -16,7 +16,7 @@ contract Whitelist {
     mapping(uint256 => WhitelistGroup) private whitelistGroups; // Mapping of groupId to Whitelist group.
     event GroupCreated(address, uint256);
 
-    constructor(address _apContract) public {
+    constructor(address _apContract){
         apContract = _apContract;
     }
 

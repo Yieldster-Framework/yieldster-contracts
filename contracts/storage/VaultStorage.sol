@@ -15,8 +15,9 @@ import "./TokenBalanceStorage.sol";
 import "../interfaces/IExchangeRegistry.sol";
 import "../interfaces/IExchange.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
+contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable,ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 

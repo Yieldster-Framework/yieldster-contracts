@@ -18,7 +18,7 @@ contract ERC20Detailed is IERC20 {
     uint256 private _totalSupply;
 
     //function to setup name and symbol of the safe token once during safe creation
-    function setupToken(string memory name, string memory symbol) internal {
+    function setupToken(string memory __name, string memory __symbol) internal {
         require(
             keccak256(abi.encodePacked((_name))) ==
                 keccak256(abi.encodePacked((""))),
@@ -30,8 +30,8 @@ contract ERC20Detailed is IERC20 {
             "Token Symbol already assigned"
         );
 
-        _name = name;
-        _symbol = symbol;
+        _name = __name;
+        _symbol = __symbol;
         _decimals = 18;
     }
 

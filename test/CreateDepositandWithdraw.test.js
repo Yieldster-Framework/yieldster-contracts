@@ -162,7 +162,7 @@ it(`Should Transfer 200 of tokens[1] to accounts[1] & depoit 100 to vault from a
 it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () => {
     let token = await ERC20.at(tokens[1])
     let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-    await testVault.withdraw(token.address, convertUtils.to18("80"), { from: accounts[0], gas: 10000000 });
+    await testVault.withdraw(token.address, convertUtils.to18("80"), { from: accounts[0], gas: 30000000 });
     let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
     assert.equal(80, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
 })
@@ -183,7 +183,7 @@ it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () =
     it("Should withdraw 5 vault tokens in tokens[0]", async () => {
         let token = await ERC20.at(tokens[0])
         let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-        await testVault.withdraw(token.address, convertUtils.to18("5"), { from: accounts[0], gas: 10000000 });
+        await testVault.withdraw(token.address, convertUtils.to18("5"), { from: accounts[0], gas: 30000000 });
         let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
         assert.equal(5, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
     })
@@ -191,14 +191,14 @@ it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () =
     it("Should withdraw 10 vault tokens in tokens[0] from user not having vault token", async () => {
         let token = await ERC20.at(tokens[0])
         await expectRevert(
-             testVault.withdraw(token.address, convertUtils.to18("10"), { from: accounts[3], gas: 10000000 }),
+             testVault.withdraw(token.address, convertUtils.to18("10"), { from: accounts[3], gas: 30000000 }),
             "You don't have enough shares",
         )
     })
 
     it("Should withdraw 1 vault tokens in ether", async () => {
         let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-        await testVault.withdraw(ether, convertUtils.to18("1"), { from: accounts[0], gas: 10000000 });
+        await testVault.withdraw(ether, convertUtils.to18("1"), { from: accounts[0], gas: 30000000 });
         let vaultTokenInUserAfter = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
         assert.equal(1, vaultTokenInUserBefore - vaultTokenInUserAfter, "incorrect")
     })
@@ -207,7 +207,7 @@ it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () =
         let token2 = await ERC20.at(tokens[2])
         let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
         try {
-            await testVault.withdraw(token2.address, convertUtils.to18("5"), { from: accounts[0], gas: 10000000 });
+            await testVault.withdraw(token2.address, convertUtils.to18("5"), { from: accounts[0], gas: 30000000 });
         } catch (err) {
             assert.include(err.message, "required asset not present in vault", "The error message should contain 'required asset not present in vault'");
         }
@@ -279,8 +279,7 @@ it(`Should withdraw 80 of tokens[1] from the vault from accounts[0]`, async () =
 
 
 /**
-ganache-cli --chain.asyncRequestProcessing false --chain.vmErrorsOnRPCResponse true --networkId 1337
-
+ganache-cli false --noVMErrorsOnRPCResponse true --networkId 1337 --forkCacheSize 4294967296
 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 0x0000000000000000000000000000000000000000
  */

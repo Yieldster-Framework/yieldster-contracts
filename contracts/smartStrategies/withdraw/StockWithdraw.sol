@@ -4,7 +4,7 @@ import "../../storage/VaultStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract StockWithdraw is VaultStorage {
+contract StockWithdraw is VaultStorage{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -37,7 +37,7 @@ contract StockWithdraw is VaultStorage {
     /// @dev Function to Withdraw assets from the Vault.
     /// @param _tokenAddress Address of the withdraw token.
     /// @param _shares Amount of Vault token shares.
-    function withdraw(address _tokenAddress, uint256 _shares) public {
+    function withdraw(address _tokenAddress, uint256 _shares) public payable nonReentrant{
         addToAssetList(_tokenAddress);
         uint256 tokenCountDecimals;
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);

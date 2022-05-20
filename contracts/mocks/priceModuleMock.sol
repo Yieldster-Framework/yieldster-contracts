@@ -18,7 +18,7 @@ contract MockPriceModule {
     mapping(address => Token) tokens; // Mapping from address to Token Information
     address public priceModuleManager;
 
-    constructor() public {
+    constructor(){
         priceModuleManager = msg.sender;
     }
 

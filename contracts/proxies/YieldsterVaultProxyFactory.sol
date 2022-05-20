@@ -31,9 +31,9 @@ contract YieldsterVaultProxyFactory {
     /// @param data Payload for message call sent to new proxy contract.
     function createProxy(bytes memory data)
         public
-        returns (YieldsterVaultProxy proxy)
+        returns (address)
     {
-        proxy = new YieldsterVaultProxy(mastercopy);
+       YieldsterVaultProxy proxy = new YieldsterVaultProxy(mastercopy);
         if (data.length > 0) 
             // solium-disable-next-line security/no-inline-assembly
             assembly {
@@ -44,6 +44,7 @@ contract YieldsterVaultProxyFactory {
         
         IAPContract(APContract).setVaultStatus(address(proxy));
         emit ProxyCreation(proxy);
+        return address(proxy);
     }
 
     /// @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.

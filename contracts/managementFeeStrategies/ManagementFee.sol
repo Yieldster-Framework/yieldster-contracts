@@ -16,7 +16,6 @@ contract ManagementFee is VaultStorage {
     using SafeERC20 for IERC20;
     event CallStatusInManagementFee(string message);
 
-
     /// @dev Function to process platform fee acquired by Yieldster.
     /// @param _feeAmountToTransfer Amount of fee to transfer(amount of tokens).
     /// @param _tokenAddress Address of token on which fee has to be given.
@@ -87,9 +86,9 @@ contract ManagementFee is VaultStorage {
             );
             // to.transfer replaced here
             (bool success, ) = to.call{value: _feeAmountToTransfer}("");
-            if (success == false) {  
-                    emit CallStatusInManagementFee("call failed in managementFee");
-                    }
+            if (success == false) {
+                emit CallStatusInManagementFee("call failed in managementFee");
+            }
         } else {
             IERC20(_tokenAddress).safeTransfer(
                 IAPContract(APContract).yieldsterDAO(),

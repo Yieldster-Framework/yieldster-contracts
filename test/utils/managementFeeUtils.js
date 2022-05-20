@@ -22,7 +22,7 @@ exports.calculateVaultNAVWithoutManagementFee = (tokensDepositedSoFar) => {
 
 exports.getManagementFeesAccruedInYieldsterDAO = async (priceModule, yieldsterVault, tokenSet, apContract, ERC20) => {
     let tokenArr = Array.from(tokenSet);
-    let yieldsterDAO = await apContract.yieldsterDAO();;
+    let yieldsterDAO = await apContract.yieldsterDAO();
     let managementFeeInDAO = new BN("0");
     await Promise.all(
         tokenArr.map(async (element) => {
@@ -40,7 +40,7 @@ exports.getManagementFeesAccruedInYieldsterDAO = async (priceModule, yieldsterVa
 
 exports.getManagementFeesAccruedInVaultStrategyBeneficiary = async (priceModule, yieldsterVault, tokenSet, apContract, ERC20) => {
     let tokenArr = Array.from(tokenSet);
-    let strategyBeneficiary = await yieldsterVault.strategyBeneficiary();;
+    let strategyBeneficiary = await yieldsterVault.strategyBeneficiary();
     let managementFeeInDAO = new BN("0");
     await Promise.all(
         tokenArr.map(async (element) => {

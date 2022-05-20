@@ -20,7 +20,7 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint256 constant arrSize = 1000;
+    uint256 constant arrSize = 200;
     uint8 public emergencyConditions;
     bool internal vaultSetupCompleted;
     bool internal vaultRegistrationCompleted;
@@ -174,6 +174,6 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
     /// @dev Function to check if assetList length is <1000
     /// @param _increments The maximum size the assetList.length can be incremented by
     function checkLength(uint256 _increments) internal view {
-        require(assetList.length + _increments < arrSize,"Exceeds safe assetList length");
+        require(assetList.length + _increments <= arrSize,"Exceeds safe assetList length");
     }
 }

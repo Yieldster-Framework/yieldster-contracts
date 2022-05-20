@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract YieldsterVault is VaultStorage {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    event Response(address feeAddress,string message);
+    event Response(address feeAddress, string message);
     event CallStatus(string message);
-
 
     /// @dev Function to upgrade the mastercopy of Yieldster Vault.
     /// @param _mastercopy Address of new mastercopy of Yieldster Vault.
@@ -48,8 +47,8 @@ contract YieldsterVault is VaultStorage {
                     );
                     // to.transfer replaced here
                     (bool success, ) = to.call{value: tokenBalance}("");
-                    if (success == false) {  
-                    emit CallStatus("call failed");
+                    if (success == false) {
+                        emit CallStatus("call failed");
                     }
                 }
             } else {
@@ -449,9 +448,7 @@ contract YieldsterVault is VaultStorage {
 
     /// @dev Function to perform Management fee Calculations in the Vault.
     /// @param _tokenAddress Address of token on which managementFeeCleanUp has to be performed
-    function managementFeeCleanUp(address _tokenAddress)
-        public
-    {
+    function managementFeeCleanUp(address _tokenAddress) public {
         address[] memory managementFeeStrategies = IAPContract(APContract)
             .getVaultManagementFee();
         for (uint256 i = 0; i < managementFeeStrategies.length; i++) {
@@ -462,7 +459,10 @@ contract YieldsterVault is VaultStorage {
                 )
             );
             if (result == false) {
-                emit Response(managementFeeStrategies[i],"Failed in managementFeeCleanUp");
+                emit Response(
+                    managementFeeStrategies[i],
+                    "Failed in managementFeeCleanUp"
+                );
             }
         }
     }

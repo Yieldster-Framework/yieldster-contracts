@@ -95,7 +95,7 @@ contract("Should create a vault with condition2, test vault functions and deposi
         assert.equal(await apContract.isWithdrawalAsset(tokens[0], { from: testVault.address }), true, "Error: asset not set as withdrawal asset")
     })
 
-    it("changing god and enabling emergency exit", async () => {
+    it("Should change god and enable emergency exit", async () => {
             
         await apContract.setYieldsterGOD(accounts[2])
         god = await apContract.yieldsterGOD();
@@ -105,115 +105,78 @@ contract("Should create a vault with condition2, test vault functions and deposi
     })
 
     //test cases for assets        
-    it("set deposit & withdrawal asset where asset exists", async () => {
-        try{
-            await testVault.setVaultAssets(
-                [ether],
-                [ether],
-                [],
-                [],
-            );
-        }catch (err) {
-            assert.include(err.message, "safe inactive", 
-            "The error message should contain 'safe inactive'");
-        }
-       
+    it("Should try to set deposit & withdrawal asset where asset exists & fail", async () => {
+
+        await expectRevert(
+            testVault.setVaultAssets([ether],[ether],[],[]), 
+           "safe inactive",
+       )       
         
     })
 
-    it("set deposit & withdrawal asset where asset do not exists", async () => {
-        try{
-            await testVault.setVaultAssets(
-                ["0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c"],
-                ["0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c"],
-                [],
-                [],
-            );
-        }catch(err){
-            assert.include(err.message, "safe inactive", 
-            "The error message should contain 'safe inactive'");
-        }  
-        
+    it("Should try to set deposit & withdrawal asset where asset do not exists & fail", async () => {
+
+        await expectRevert(
+            testVault.setVaultAssets(["0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c"],["0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c"],[],[]), 
+           "safe inactive",
+       ) 
     })
 
-    it("set deposit & withdrawal asset enable and disable asset in same call", async () => {
-        try{
-            await testVault.setVaultAssets(
-                [tokens[5]],
-                [tokens[5]],
-                [tokens[5]],
-                [tokens[5]],
-            );
-        }catch(err){
-            assert.include(err.message, "safe inactive", 
-            "The error message should contain 'safe inactive'");
-        }
+    it("Should try to set deposit & withdrawal asset enable and disable asset in same call & fail", async () => {
+        await expectRevert(
+            testVault.setVaultAssets([tokens[5]],[tokens[5]],[tokens[5]],[tokens[5]]), 
+           "safe inactive",
+       )
         
     })
 
      //test cases for smart strategies
-     it("set vault smart startegy not approved by aps", async () => {
-        try{
-            await testVault.setVaultSmartStrategy("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",1);
-        }catch(err){
-            assert.include(err.message, "Smart Strategy not Supported by Yieldster", 
-            "The error message should contain 'Smart Strategy not Supported by Yieldster'");
-        }
-        
+     it("Should try to set vault smart startegy not approved by aps & fail", async () => {
+        await expectRevert(
+            testVault.setVaultSmartStrategy("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",1),
+           "Smart Strategy not Supported by Yieldster",
+       ) 
     })
 
-    it("set strategy percentage and beneficiary",async ()=>{
-        try{
-            await testVault.setBeneficiaryAndPercentage(accounts[3],"2000000000000000000")
-                }catch(err){
-                    assert.include(err.message, "safe inactive", 
-                    "The error message should contain 'safe inactive'"); 
-                }
+    it("Should try to set strategy percentage and beneficiary  & fail",async ()=>{
+        await expectRevert(
+            testVault.setBeneficiaryAndPercentage(accounts[3],"2000000000000000000"),
+           "safe inactive",
+       )
     })
 
-    it("checking isVaultAdmin modifier by changing threshold value",async ()=>{
+    it("Should check isVaultAdmin modifier by changing threshold value",async ()=>{
         await testVault.setThreshold("2000000000000000000")
         assert.equal("2000000000000000000",(await testVault.threshold()).toString(),"Wrong Threshold")
-        try{
-            await testVault.setThreshold("5000000000000000000000",{from:accounts[4]})
-        }catch (err) {
-            assert.include(err.message, "not vaultAdmin", "The error message should contain 'not vaultAdmin'");
-        }
-        
+        await expectRevert(
+            testVault.setThreshold("5000000000000000000000",{from:accounts[4]}),
+           "not vaultAdmin",
+        )
     })
 
      //test cases for deposit
-     it("deposit 10  ${tokens[0]}  to the vault", async () => {
+     it("Should try to deposit 10  ${tokens[0]}  to the vault & fail", async () => {
         let token = await ERC20.at(tokens[0])
 
         await token.approve(testVault.address, convertUtils.to18("10"), {
             from: accounts[0]
         })
-        try{
-            await testVault.deposit(token.address, convertUtils.to18("10"), {
-                from: accounts[0]
-            });
-        }catch(err){
-            assert.include(err.message, "safe inactive", 
-            "The error message should contain 'safe inactive'"); 
-        }
-        
+        await expectRevert(
+            testVault.deposit(token.address, convertUtils.to18("10"), {from: accounts[0]}),
+           "safe inactive",
+      ) 
     })
 
-    it("deposit 1 Ether to the vault", async () => {
+    it("Should try to deposit 1 Ether to the vault & fail", async () => {
         assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
-        try{
-            await testVault.deposit(ether, convertUtils.to18("1"), { value: convertUtils.to18("1"),from: accounts[0]});
-
-        }catch(err){
-            assert.include(err.message, "safe inactive", 
-            "The error message should contain 'safe inactive'"); 
-        }
+        await expectRevert(
+            testVault.deposit(ether, convertUtils.to18("1"), { value: convertUtils.to18("1"),from: accounts[0]}),
+           "safe inactive",
+      )
     })
 
-    it("direct transfer 10 dai", async () => {                  //check
+    it("Should direct transfer 10 dai", async () => {                
         let token = await ERC20.at(tokens[0])
-
         assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(token.address)).toString()))
         assert.equal(0, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
         await token.transfer(testVault.address,convertUtils.to18("10"),{from: accounts[0]});
@@ -221,7 +184,7 @@ contract("Should create a vault with condition2, test vault functions and deposi
         assert.equal(10, convertUtils.from18((await token.balanceOf(testVault.address)).toString()))
     })
 
-    it("direct transfer 1 ether", async () => {
+    it("Should direct transfer 1 ether", async () => {
         assert.equal(0, convertUtils.from18((await testVault.getTokenBalance(ether)).toString()))
         assert.equal(0, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
         await web3.eth.sendTransaction({ to: testVault.address, from: accounts[1], value: convertUtils.to18("1") })            
@@ -229,70 +192,51 @@ contract("Should create a vault with condition2, test vault functions and deposi
         assert.equal(1, convertUtils.from18(( await web3.eth.getBalance(testVault.address)).toString()))
     })
 
-    // it("deposit 10 USDC to the vault (asset is not part of vaultAsset)", async () => {
-    //     try{
-    //         await usdc.approve(testVault.address, convertUtils.to6("100"), {
-    //             from: accounts[0]
-    //         })
-    //         await testVault.deposit(usdc.address, convertUtils.to6("100"), {
-    //             from: accounts[0]
-    //         });
-    //     }catch(err){
-    //         assert.include(err.message, "safe inactive", 
-    //         "The error message should contain 'safe inactive'"); 
-    //     }
-    // })
+    it("Should try to deposit 10 USDC to the vault (asset is not part of vaultAsset) & fail", async () => {
+        let usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+        await expectRevert(
+            testVault.deposit(usdc, convertUtils.to6("100"), {from:accounts[0]}),
+            "safe inactive",
+        )
+    })
 
 
     //test cases for withdraw
         //3082 tokens
-        it("withdraw 2 vault tokens in ${tokens[0]}", async () => {
+        it("Should try to withdraw 2 vault tokens in ${tokens[0]} & fail", async () => {
         let token = await ERC20.at(tokens[0])
-
-            let vaultTokenInUserBefore = convertUtils.from18((await testVault.balanceOf(accounts[0])).toString())
-            try{
-                await testVault.withdraw(token.address,convertUtils.to18("2"), {from:accounts[0],gas:10000000});
-            }catch(err){
-                assert.include(err.message, "safe inactive", 
-                "The error message should contain 'safe inactive'");  
-            }
+        await expectRevert(
+            testVault.withdraw(token.address,convertUtils.to18("2"), {from:accounts[0],gas:10000000}),
+            "safe inactive",
+        )
         })
 
-        it("withdraw 10 vault tokens in ${tokens[0]} from user not having vault token", async () => {
+        it("Should try to withdraw 10 vault tokens in ${tokens[0]} from user not having vault token", async () => {
         let token = await ERC20.at(tokens[0])
-
-            try{
-                await testVault.withdraw(token.address,convertUtils.to18("10"), {from:accounts[1],gas:10000000});
-            }catch(err){
-               assert.include(err.message, "safe inactive", 
-               "The error message should contain 'safe inactive'"); 
-            }
+        await expectRevert(
+            testVault.withdraw(token.address,convertUtils.to18("10"), {from:accounts[1],gas:10000000}),
+            "safe inactive",
+        )
         })
 
-        it("withdraw 100 vault tokens in ether", async () => {
-
-            try{
-            await testVault.withdraw(ether,convertUtils.to18("100"), {from:accounts[0],gas:10000000});
-
-            }catch(err){
-                assert.include(err.message, "safe inactive", 
-                "The error message should contain 'safe inactive'"); 
-            }
+        it("Should try to withdraw 100 vault tokens in ether & fail", async () => {
+            await expectRevert(
+                testVault.withdraw(ether,convertUtils.to18("100"), {from:accounts[0],gas:10000000}),
+                "safe inactive",
+            )
 
         })
 
-        it("withdraw 1000 vault tokens in ${tokens[3]}, but enough usdt is not present in vault", async () => {
+        it("Should try to withdraw 1000 vault tokens in ${tokens[3]}, but enough usdt is not present in vault", async () => {
         let token = await ERC20.at(tokens[3])
-
-            try{
-                await testVault.withdraw(token.address,convertUtils.to18("1000"), {from:accounts[0],gas:10000000});
-            }catch(err){
-               assert.include(err.message, "safe inactive", 
-               "The error message should contain 'safe inactive'"); 
-            }
+        await expectRevert(
+            testVault.withdraw(token.address,convertUtils.to18("1000"), {from:accounts[0],gas:10000000}),
+            "safe inactive",
+        )
         })
 
-        //out of gas test cases                                         //check
+        //out of gas test cases                                     
         it("enable emergency exit with large number of assets", async () => {
         let token = await ERC20.at(tokens[0])
 
@@ -311,33 +255,31 @@ contract("Should create a vault with condition2, test vault functions and deposi
             }
         })
 
-        //TODO isWhitelisted test
 
         //god based test cases
-        it("set yieldster vault by non god", async () => {
+        it("Should try to set yieldster vault by non god & fail", async () => {
             god = await apContract.yieldsterGOD();
-            try{
-                await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address,{from:accounts[3]})
-            }catch (err) {
-                assert.include(err.message, "unauthorized","The error message should contain 'unauthorized'")
-            }
+            await expectRevert(
+                testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address,{from:accounts[3]}),
+                "unauthorized",
+            )
         })
 
-        it("set yieldster vault god", async () => {               
-            god = await apContract.yieldsterGOD();
-            await testVault.upgradeMasterCopy(yieldsterVaultMasterCopy.address,{from:god})
+        it("Should set yieldster vault god", async () => {   
+               await apContract.setYieldsterGOD(accounts[9],{from:accounts[2]}),
+               assert.equal(accounts[9],await apContract.yieldsterGOD(),"god is not set")
+              
         })
 
-        it("set APS by non god", async () => {
+        it("Should not be able to set APS by non god", async () => {
             god = await apContract.yieldsterGOD();
-            try{
-                await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",{from:accounts[0]})
-            }catch (err) {
-                assert.include(err.message, "unauthorized","The error message should contain 'unauthorized'")
-            }
+            await expectRevert(
+                testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",{from:accounts[0]}),
+                "unauthorized",
+            )  
         })
 
-        it("set APS by god", async () => {
+        it("Should set APS by god", async () => {
             god = await apContract.yieldsterGOD();
             await testVault.setAPS("0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",{from:god})
             aps = await testVault.APContract()

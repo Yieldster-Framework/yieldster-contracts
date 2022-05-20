@@ -26,7 +26,9 @@ contract StockWithdraw is VaultStorage {
         _burn(msg.sender, shares);
         if (tokenAddress == eth) {
             address payable to = payable(msg.sender);
-            to.transfer(transferAmount);
+            // to.transfer replaced here
+            (bool success, ) = to.call{value: transferAmount}("");
+            require(success, "Transfer failed.");
         } else {
             IERC20(tokenAddress).safeTransfer(msg.sender, transferAmount);
         }

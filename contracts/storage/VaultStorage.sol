@@ -29,7 +29,7 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
     address public vaultAdmin;
     uint256[] internal whiteListGroups;
     mapping(uint256 => bool) isWhiteListGroupPresent;
-    address[] internal assetList;
+    address[] public assetList;
     mapping(address => bool) internal isAssetPresent;
     address public strategyBeneficiary;
     uint256 public strategyPercentage;

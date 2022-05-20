@@ -36,6 +36,8 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable,Re
     uint256 public strategyPercentage;
     uint256 public threshold;
     address public eth;
+    mapping(address=>uint256) userEtherBalance;
+    address[] public etherDepositors;
 
     TokenBalanceStorage tokenBalances;
 
@@ -182,5 +184,11 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable,Re
             assetList.length + _increments <= arrSize,
             "Exceeds safe assetList length"
         );
+    }
+
+    /// @dev Function to return mapping details of ether depositors
+    /// @param _address address to be queried
+    function getEtherDepositor(address _address) external view returns(uint256){
+        return userEtherBalance[_address];
     }
 }

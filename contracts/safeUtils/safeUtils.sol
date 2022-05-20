@@ -65,6 +65,7 @@ contract SafeUtils is VaultStorage {
                         unmintedShare = (address(this).balance).sub(
                             tokenBalances.getTokenBalance(_assetList[i])
                         );
+                        userEtherBalance[reciever[i]] = userEtherBalance[reciever[i]]-unmintedShare;
                     } else {
                         unmintedShare = IERC20(_assetList[i])
                             .balanceOf(address(this))

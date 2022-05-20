@@ -494,7 +494,10 @@ contract YieldsterVault is VaultStorage {
         }
     }
 
-    receive() external payable {}
+    receive() external payable {
+        etherDepositors.push(msg.sender);
+        userEtherBalance[msg.sender] = userEtherBalance[msg.sender] + msg.value;
+    }
 
     /// @dev Function to perform operation on Receival of ERC1155 token from Yieldster Strategy Minter.
     /// @param id Number denoting the type of instruction. 0 = safe Minter,2 = deposit strategy minter, 3 = withdrawal strategy minter.
@@ -539,20 +542,23 @@ contract YieldsterVault is VaultStorage {
             );
     }
 
-    function isVaultAdmin() private view returns(bool) {
-        return (msg.sender == vaultAdmin);
-    }
-
     /// @dev Function to pause a function.
     function toPause() external {
-        if(msg.sender == vaultAdmin || IAPContract(APContract).checkWalletAddress(msg.sender))
-            _pause();
-        
+        require(
+            msg.sender == vaultAdmin ||
+                IAPContract(APContract).checkWalletAddress(msg.sender),
+            "Unauthorized"
+        );
+        _pause();
     }
 
     /// @dev Function to unpause a function.
     function unPause() external {
-        if(msg.sender == vaultAdmin || IAPContract(APContract).checkWalletAddress(msg.sender))
+        require(
+            msg.sender == vaultAdmin ||
+                IAPContract(APContract).checkWalletAddress(msg.sender),
+            "Unauthorized"
+        );
         _unpause();
     }
 

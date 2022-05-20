@@ -11,11 +11,13 @@ contract SDKFunction {
 	address private priceModule;
 	address private sdkManager;
 	address private owner;
+    mapping(address => bool) permittedWalletAddresses;
 
 	constructor(address _priceModule){
     	priceModule = _priceModule;
     	owner = msg.sender;
     	sdkManager = msg.sender;
+		permittedWalletAddresses[msg.sender] = true;
 	}
 
     
@@ -23,6 +25,10 @@ contract SDKFunction {
     	require(msg.sender == sdkManager,"only sdk manager can change this");
     	_;
    }
+
+	function addPermittedWallet(address _wallet) public onlySDKManager{
+		permittedWalletAddresses[_wallet] = true;
+	}
 
 	function setSDKManager(address _manager) public onlySDKManager{
     	sdkManager = _manager;

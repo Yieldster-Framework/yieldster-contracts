@@ -42,7 +42,7 @@ contract APContract is Initializable {
     address public sdkContract;
 
     address public mStorage;
-    
+
     struct Vault {
         mapping(address => bool) vaultAssets;
         mapping(address => bool) vaultDepositAssets;
@@ -55,7 +55,6 @@ contract APContract is Initializable {
         uint256 slippage;
     }
 
-    event VaultCreation(address vaultAddress);
 
     mapping(address => bool) assets;
 
@@ -253,8 +252,10 @@ contract APContract is Initializable {
     /// @param _vaultAdmin Address of the new APS Manager.
     function changeVaultAdmin(address _vaultAdmin) external {
         require(vaults[msg.sender].created, "Vault is not present");
-        vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] = vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] -1;
-        vaultsOwnedByAdmin[_vaultAdmin] = vaultsOwnedByAdmin[_vaultAdmin] +1;
+        vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] =
+            vaultsOwnedByAdmin[vaults[msg.sender].vaultAdmin] -
+            1;
+        vaultsOwnedByAdmin[_vaultAdmin] = vaultsOwnedByAdmin[_vaultAdmin] + 1;
         vaults[msg.sender].vaultAdmin = _vaultAdmin;
     }
 
@@ -384,10 +385,11 @@ contract APContract is Initializable {
 
     /// @dev Function to create a vault.
     /// @param _vaultAddress Address of the new vault.
-    function setVaultStatus(address _vaultAddress)    
-    public
-    {
-        require(msg.sender == proxyFactory, "Only Proxy Factory can perform this operation");
+    function setVaultStatus(address _vaultAddress) public {
+        require(
+            msg.sender == proxyFactory,
+            "Only Proxy Factory can perform this operation"
+        );
         vaultCreated[_vaultAddress] = true;
     }
 
@@ -675,9 +677,10 @@ contract APContract is Initializable {
     function getWETH() external view returns (address) {
         return wEth;
     }
+
     /// @dev Function to set wEth Address.
     /// @param _wEth Address of wEth.
-    function setWETH(address _wEth) external onlyYieldsterDAO{
+    function setWETH(address _wEth) external onlyYieldsterDAO {
         wEth = _wEth;
     }
 
@@ -714,18 +717,21 @@ contract APContract is Initializable {
 
     /// @dev Function to check number of vaults owned by an admin
     /// @param _vaultAdmin address of vaultAdmin
-    function vaultsCount(address _vaultAdmin)  public view returns (uint256) {
+    function vaultsCount(address _vaultAdmin) public view returns (uint256) {
         return vaultsOwnedByAdmin[_vaultAdmin];
     }
 
     /// @dev Function to retrieve the storage of managementFee
-    function getPlatformFeeStorage() public view returns (address){
+    function getPlatformFeeStorage() public view returns (address) {
         return mStorage;
     }
 
     /// @dev Function to set the storage of managementFee
     /// @param _mStorage address of platform storage
-    function setManagementFeeStorage(address _mStorage) external onlyYieldsterDAO{
+    function setManagementFeeStorage(address _mStorage)
+        external
+        onlyYieldsterDAO
+    {
         mStorage = _mStorage;
     }
 
@@ -733,17 +739,35 @@ contract APContract is Initializable {
     /// @param _sdkContract address of sdkContract
     function setSDKContract(address _sdkContract) external onlyYieldsterDAO {
         sdkContract = _sdkContract;
-    } 
+    }
 
-    function setWalletAddress(address[] memory _walletAddresses,bool[] memory _permission) external onlyYieldsterDAO {
-        for(uint256 i=0;i<_walletAddresses.length;i++){
-            if(_walletAddresses[i] != address(0))
-                if(permittedWalletAddresses[_walletAddresses[i]]!=_permission[i])
-                    permittedWalletAddresses[_walletAddresses[i]] = _permission[i];
+    /// @dev Function to set the approved wallets
+    /// @param _walletAddresses address of wallet
+    /// @param _permission status of permission
+    function setWalletAddress(
+        address[] memory _walletAddresses,
+        bool[] memory _permission
+    ) external onlyYieldsterDAO {
+        for (uint256 i = 0; i < _walletAddresses.length; i++) {
+            if (_walletAddresses[i] != address(0))
+                if (
+                    permittedWalletAddresses[_walletAddresses[i]] !=
+                    _permission[i]
+                )
+                    permittedWalletAddresses[_walletAddresses[i]] = _permission[
+                        i
+                    ];
         }
     }
 
-    function checkWalletAddress(address _walletAddress) public view returns(bool){
+    /// @dev Function to check if  approved wallet
+    /// @param _walletAddress address of wallet
+
+    function checkWalletAddress(address _walletAddress)
+        public
+        view
+        returns (bool)
+    {
         return permittedWalletAddresses[_walletAddress];
     }
 }

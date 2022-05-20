@@ -126,10 +126,13 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
         returns (uint256)
     {
         uint256 tokenUSD = IAPContract(APContract).getUSDPrice(_tokenAddress);
+        address tokenAddress = _tokenAddress;
+        if (tokenAddress == eth)
+            tokenAddress = IAPContract(APContract).getWETH();
         return
             (
                 IHexUtils(IAPContract(APContract).stringUtils())
-                    .toDecimals(_tokenAddress, _amount)
+                    .toDecimals(tokenAddress, _amount)
                     .mul(tokenUSD)
             ).div(1e18);
     }
@@ -174,6 +177,9 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable {
     /// @dev Function to check if assetList length is <1000
     /// @param _increments The maximum size the assetList.length can be incremented by
     function checkLength(uint256 _increments) internal view {
-        require(assetList.length + _increments <= arrSize,"Exceeds safe assetList length");
+        require(
+            assetList.length + _increments <= arrSize,
+            "Exceeds safe assetList length"
+        );
     }
 }

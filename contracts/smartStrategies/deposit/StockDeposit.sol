@@ -27,7 +27,7 @@ contract StockDeposit is VaultStorage {
             _share = IHexUtils(IAPContract(APContract).stringUtils())
                 .toDecimals(tokenAddress, _amount);
         } else {
-            _share = getMintValue(getDepositNAV(tokenAddress, _amount));
+            _share = getMintValue(getDepositNAV(_tokenAddress, _amount));
         }
 
         tokenBalances.setTokenBalance(

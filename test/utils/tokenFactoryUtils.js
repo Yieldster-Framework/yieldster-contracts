@@ -1359,7 +1359,7 @@ exports.sleep = (ms) => {
 exports.deployTokens = async (tokenCount, tokenFactory) => {
     let tokens = [];
     for (let index = 0; index < tokenCount; index++) {
-        let transaction = await tokenFactory.deployNewERC20Token(`TOKEN-${index}`, `TK-${index}`);
+        let transaction = await tokenFactory.deployNewERC20Token(`TEST-TOKEN-${index}`, `TTK-${index}`);
         let token = getLogs(transaction);
         tokens.push(token)
     }

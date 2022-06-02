@@ -1,8 +1,8 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0xf9f5af3c41168Bbc3Ce0B27866Ac771dD97af25d",
-    "txHash": "0xa35880efd675a1a508490da59c4d5c8de7475b17171dc3dbb044d513966a63aa"
+    "address": "0xbf5A1433F364866c50eE1B0E20c215D563F6265F",
+    "txHash": "0x0c811f81f5c03ab6f525196f8cbfa18195aa482683051d06f3a987141a7744d5"
   },
   "proxies": [
     {
@@ -854,6 +854,21 @@
       "address": "0x596F44Be237aD86AD7f4ecd3b277E6B6B3EEc612",
       "txHash": "0x89060cc82b00315147cebda49237115d67b2cf251e15c8c1a80eb4c935f4400c",
       "kind": "transparent"
+    },
+    {
+      "address": "0x6Ab26b6fB286c5BA7bcc4122AD75Cb9c37C5Ef57",
+      "txHash": "0xbf410dc1422689873c71ae29403651031117d15dda3224ee622dcf9e1ee4e737",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x46b17a4f896a598fea0e26322399995e96D7ac4F",
+      "txHash": "0x68e2be919392b49d71ddd42f043d0c8709ff1a40420040a2aa9e29096a111bc3",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0DAfE934894eDFc23e1E086a1b81fB42c4c6699B",
+      "txHash": "0x8a3a79125f6dbd6b377d423175bfbd1e3a47fb2d4c5b04b1808d660e181747f9",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -1419,6 +1434,308 @@
           },
           "t_array(t_address)dyn_storage": {
             "label": "address[]"
+          }
+        }
+      }
+    },
+    "27a6edfa815d94779f001bc0ce3278e7ccde3b030d04df7f87dadfa2b0e78e5a": {
+      "address": "0x26b59732305917b7BD146B9b7A3CA87Ef8551FF6",
+      "txHash": "0x6a38f7a3c19ad65a2092fce668461fe7e9e252e99812db62b43e489afe4bb1a3",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "contract": "APContract",
+            "label": "yieldsterDAO",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:8"
+          },
+          {
+            "contract": "APContract",
+            "label": "yieldsterTreasury",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:10"
+          },
+          {
+            "contract": "APContract",
+            "label": "yieldsterGOD",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:12"
+          },
+          {
+            "contract": "APContract",
+            "label": "emergencyVault",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:14"
+          },
+          {
+            "contract": "APContract",
+            "label": "yieldsterExchange",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:16"
+          },
+          {
+            "contract": "APContract",
+            "label": "stringUtils",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:18"
+          },
+          {
+            "contract": "APContract",
+            "label": "whitelistModule",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:20"
+          },
+          {
+            "contract": "APContract",
+            "label": "proxyFactory",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:22"
+          },
+          {
+            "contract": "APContract",
+            "label": "priceModule",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:24"
+          },
+          {
+            "contract": "APContract",
+            "label": "safeMinter",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:26"
+          },
+          {
+            "contract": "APContract",
+            "label": "safeUtils",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:28"
+          },
+          {
+            "contract": "APContract",
+            "label": "exchangeRegistry",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:30"
+          },
+          {
+            "contract": "APContract",
+            "label": "stockDeposit",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:32"
+          },
+          {
+            "contract": "APContract",
+            "label": "stockWithdraw",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:34"
+          },
+          {
+            "contract": "APContract",
+            "label": "platFormManagementFee",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:36"
+          },
+          {
+            "contract": "APContract",
+            "label": "profitManagementFee",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:38"
+          },
+          {
+            "contract": "APContract",
+            "label": "wEth",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:40"
+          },
+          {
+            "contract": "APContract",
+            "label": "sdkContract",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:42"
+          },
+          {
+            "contract": "APContract",
+            "label": "mStorage",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:44"
+          },
+          {
+            "contract": "APContract",
+            "label": "assets",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:59"
+          },
+          {
+            "contract": "APContract",
+            "label": "vaults",
+            "type": "t_mapping(t_address,t_struct(Vault)5822_storage)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:61"
+          },
+          {
+            "contract": "APContract",
+            "label": "vaultCreated",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:63"
+          },
+          {
+            "contract": "APContract",
+            "label": "APSManagers",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:65"
+          },
+          {
+            "contract": "APContract",
+            "label": "vaultsOwnedByAdmin",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:67"
+          },
+          {
+            "contract": "APContract",
+            "label": "smartStrategies",
+            "type": "t_mapping(t_address,t_struct(SmartStrategy)5850_storage)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:75"
+          },
+          {
+            "contract": "APContract",
+            "label": "minterStrategyMap",
+            "type": "t_mapping(t_address,t_address)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:77"
+          },
+          {
+            "contract": "APContract",
+            "label": "managementFeeStrategies",
+            "type": "t_mapping(t_address,t_struct(vaultActiveManagemetFee)5871_storage)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:85"
+          },
+          {
+            "contract": "APContract",
+            "label": "permittedWalletAddresses",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\project:\\contracts\\aps\\APContract.sol:87"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_address,t_struct(Vault)5822_storage)": {
+            "label": "mapping(address => struct APContract.Vault)"
+          },
+          "t_struct(Vault)5822_storage": {
+            "label": "struct APContract.Vault",
+            "members": [
+              {
+                "label": "vaultAssets",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "vaultDepositAssets",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "vaultWithdrawalAssets",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "depositStrategy",
+                "type": "t_address"
+              },
+              {
+                "label": "withdrawStrategy",
+                "type": "t_address"
+              },
+              {
+                "label": "whitelistGroup",
+                "type": "t_array(t_uint256)dyn_storage"
+              },
+              {
+                "label": "vaultAdmin",
+                "type": "t_address"
+              },
+              {
+                "label": "created",
+                "type": "t_bool"
+              },
+              {
+                "label": "slippage",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_struct(SmartStrategy)5850_storage)": {
+            "label": "mapping(address => struct APContract.SmartStrategy)"
+          },
+          "t_struct(SmartStrategy)5850_storage": {
+            "label": "struct APContract.SmartStrategy",
+            "members": [
+              {
+                "label": "minter",
+                "type": "t_address"
+              },
+              {
+                "label": "executor",
+                "type": "t_address"
+              },
+              {
+                "label": "created",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)"
+          },
+          "t_mapping(t_address,t_struct(vaultActiveManagemetFee)5871_storage)": {
+            "label": "mapping(address => struct APContract.vaultActiveManagemetFee)"
+          },
+          "t_struct(vaultActiveManagemetFee)5871_storage": {
+            "label": "struct APContract.vaultActiveManagemetFee",
+            "members": [
+              {
+                "label": "isActiveManagementFee",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "activeManagementFeeIndex",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "label": "activeManagementFeeList",
+                "type": "t_array(t_address)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_uint8": {
+            "label": "uint8"
           }
         }
       }

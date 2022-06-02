@@ -43,7 +43,7 @@ contract YieldsterVault is VaultStorage {
                 uint256 tokenBalance = address(this).balance;
                 if (tokenBalance > 0) {
                     address payable to = payable(
-                        IAPContract(APContract).emergencyVault()
+                        emergencyVault
                     );
                     // to.transfer replaced here
                     (bool success, ) = to.call{value: tokenBalance}("");
@@ -56,7 +56,7 @@ contract YieldsterVault is VaultStorage {
                 uint256 tokenBalance = token.balanceOf(address(this));
                 if (tokenBalance > 0) {
                     token.safeTransfer(
-                        IAPContract(APContract).emergencyVault(),
+                        emergencyVault,
                         tokenBalance
                     );
                 }
@@ -94,13 +94,15 @@ contract YieldsterVault is VaultStorage {
     /// @dev Setup function sets initial storage of contract.
     /// @param _APContract Address of apcontract.
     /// @param _vaultAdmin Address of the Vault APS Manager.
-    function setup(address _APContract, address _vaultAdmin) external {
+    /// @param _emergencyVault Address of the emergency vault.
+    function setup(address _APContract, address _vaultAdmin,address _emergencyVault) external {
         require(!vaultSetupCompleted, "Vault is already setup");
         vaultSetupCompleted = true;
         vaultAdmin = _vaultAdmin;
         APContract = _APContract;
         owner = _vaultAdmin;
         eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        emergencyVault=_emergencyVault;
         tokenBalances = new TokenBalanceStorage();
     }
 
@@ -566,4 +568,12 @@ contract YieldsterVault is VaultStorage {
     function getVaultSlippage() external view returns (uint256) {
         return IAPContract(APContract).getVaultSlippage();
     }
+
+    /// @dev Function to change emergency vault
+    /// @param _emergencyVault  address of the emergency vault
+    function changeEmergencyVault(address _emergencyVault) public {
+        _isVaultAdmin();
+        emergencyVault = _emergencyVault;
+    }
+
 }

@@ -38,7 +38,7 @@ contract VaultStorage is MasterCopy, ERC20Detailed, ERC1155Receiver, Pausable,Re
     address public eth;
     mapping(address=>uint256) userEtherBalance;
     address[] public etherDepositors;
-
+    address public emergencyVault;
     TokenBalanceStorage tokenBalances;
 
     //TODO verify if this code has to be used for this fn

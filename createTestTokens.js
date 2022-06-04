@@ -1,6 +1,5 @@
 require("dotenv").config();
 const Web3 = require("web3");
-const web3 = new Web3(new Web3.providers.WebsocketProvider("wss://rinkeby.infura.io/ws/v3/6b7e574215f04cd3b9ec93f791a8b6c6"));
 // const utils = require("./test/utils/general");
 
 const MockPriceModule = [
